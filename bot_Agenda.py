@@ -6,6 +6,8 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.action_chains import ActionChains
+from time import sleep
 
 # Isso cria o arquivo do banco se não existir e conecta a ele
 conexao = sqlite3.connect('cronograma.db')
@@ -22,7 +24,7 @@ CREATE TABLE IF NOT EXISTS eventos (
     descricao TEXT
 )
 ''')
-
+conexao.commit()
 # Configurações para não precisar de QR Code toda hora
 chrome_options = Options()
 caminho_atual = os.getcwd()
@@ -54,16 +56,33 @@ for tentativa in range(3):
 
 try:
     while entrou:
-        pass
+        sleep(0.3)
+        # Procuramos um SPAN que contenha a palavra 'lida' no seu rótulo de acessibilidade
+            # Isso filtra apenas as notificações reais.
+        try:
+            notificacoes = driver.find_elements(By.XPATH, "//span[contains(@aria-label, 'lida')]")
+
+            if len(notificacoes) > 0:
+                # Pegamos a última bolinha da lista (geralmente as mais recentes ficam embaixo)
+                bolinha = notificacoes[-1]
+                
+                # Movemos o mouse até a bolinha e clicamos (mais seguro que o .click direto)
+                ActionChains(driver).move_to_element_with_offset(bolinha, -50, 0).click().perform()
+                print("Agendaman detectou uma mensagem real e abriu a conversa!")
+                sleep(2)
+            else:
+                # Se não houver nada, o bot fica em silêncio
+                pass
+        except Exception as e:
+            print(f"Erro na patrulha: {e}")
     
 except KeyboardInterrupt:
+    print(bolinha)
     print("Fechando o bot")
-    entrou = False
 except Exception as Erro:
-    entrou = False
     print(f"Aconteceu um erro inesperado: {Erro}")
 
-finally:
-    conexao.commit()
-    driver.close()
-    conexao.close()
+
+
+driver.close()
+conexao.close()
