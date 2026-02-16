@@ -1,4 +1,5 @@
 import sqlite3, os
+import bot_funcoes
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
@@ -7,6 +8,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.action_chains import ActionChains
+from selenium.webdriver.common.keys import Keys
 from time import sleep
 
 # Isso cria o arquivo do banco se não existir e conecta a ele
@@ -56,7 +58,7 @@ for tentativa in range(3):
 
 try:
     while entrou:
-        sleep(0.3)
+        sleep(0.07)
         # Procuramos um SPAN que contenha a palavra 'lida' no seu rótulo de acessibilidade
             # Isso filtra apenas as notificações reais.
         try:
@@ -69,7 +71,31 @@ try:
                 # Movemos o mouse até a bolinha e clicamos (mais seguro que o .click direto)
                 ActionChains(driver).move_to_element_with_offset(bolinha, -50, 0).click().perform()
                 print("Agendaman detectou uma mensagem real e abriu a conversa!")
-                sleep(2)
+                sleep(0.5)
+                baloes_recebidos = driver.find_elements(By.CSS_SELECTOR, "div.message-in")
+                if len(baloes_recebidos) > 0:
+                    mensagem = baloes_recebidos[-1].text
+                    mensagem = mensagem[:-6]
+                    print(f'Pessoa mandou: {mensagem}')
+                    resultado = bot_funcoes.decidir_destino(mensagem)
+
+                    if resultado == 'sucesso':
+                        resposta = "Obrigado pelo comando"
+                        print('Bot detectou comando')
+                    else:
+                        if resultado == 'ajudar':
+                            resposta = "Por que não tem comando?"
+                            print('Bot detectou comando de ajuda')
+                        elif resultado == 'Najudar':
+                            resposta = "Desculpe-me, não entendi bulunfas do que você escreveu"
+                            print('Bot não detectou nenhum comando')
+                
+                    barra_texto = driver.find_element(By.XPATH, '//div[@contenteditable="true"][@data-tab="10"]')
+                    barra_texto.click()
+                    barra_texto.send_keys(resposta)
+                    barra_texto.send_keys(Keys.ENTER)
+                    barra_texto.send_keys(Keys.ESCAPE)
+
             else:
                 # Se não houver nada, o bot fica em silêncio
                 pass
