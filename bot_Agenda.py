@@ -1,3 +1,7 @@
+"""
+    Pra eu não me perder na lógica: Agr tenho que pegar o número da pessoa e mandar junto com a mensagem dela, e verificar se ela é um dos adimins do grupo.
+"""
+
 import sqlite3, os
 import bot_funcoes
 from selenium import webdriver
@@ -27,6 +31,7 @@ CREATE TABLE IF NOT EXISTS eventos (
 )
 ''')
 conexao.commit()
+
 # Configurações para não precisar de QR Code toda hora
 chrome_options = Options()
 caminho_atual = os.getcwd()
@@ -109,6 +114,6 @@ except Exception as Erro:
     print(f"Aconteceu um erro inesperado: {Erro}")
 
 
-
+cursor.close()
 driver.close()
 conexao.close()

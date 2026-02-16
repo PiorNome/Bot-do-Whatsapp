@@ -2,3 +2,4 @@ venv/
 cookie/
 cronograma.db
 __pycache__
+.env
