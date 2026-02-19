@@ -2,7 +2,7 @@
     Pra eu não me perder na lógica: Agr tenho que pegar o número da pessoa e mandar junto com a mensagem dela, e verificar se ela é um dos adimins do grupo.
 """
 
-import sqlite3, os
+import os
 import bot_funcoes
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
@@ -14,29 +14,19 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.keys import Keys
 from time import sleep
-
-# Isso cria o arquivo do banco se não existir e conecta a ele
-conexao = sqlite3.connect('cronograma.db')
-cursor = conexao.cursor()
-
-# Criando a tabela (Lógica SQL)
-# O ID é automático, assim você não precisa se preocupar em numerar
-cursor.execute('''
-CREATE TABLE IF NOT EXISTS eventos (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    data_evento TEXT NOT NULL,
-    materia TEXT NOT NULL,
-    tipo TEXT NOT NULL,
-    descricao TEXT
-)
-''')
-conexao.commit()
-
 # Configurações para não precisar de QR Code toda hora
 chrome_options = Options()
 caminho_atual = os.getcwd()
 localizacao_cookie = os.path.join(caminho_atual, "cookie")
 chrome_options.add_argument(f"--user-data-dir={localizacao_cookie}")
+
+RESPOSTAS_SISTEMA = {
+    'agendar': {
+        'erros': ['Data invalida\n', 'Matéria invalida\n', 'Tipo invalido\n'],
+        'ajuda': ['Formato valido: DD/MM/YY ou DD/MM/YYYY\n', '\n', 'Tipos aceitos: Prova, Trabalho e Vazio\n']
+        }
+}
+
 
 # Inicia o navegador
 servico = Service(ChromeDriverManager().install())
@@ -82,18 +72,29 @@ try:
                     mensagem = baloes_recebidos[-1].text
                     mensagem = mensagem[:-6]
                     print(f'Pessoa mandou: {mensagem}')
-                    resultado = bot_funcoes.decidir_destino(mensagem)
+                    resultado = bot_funcoes.decidir_destino(mensagem.lower())
+                    print(f"Função decidir_destino retornou: {resultado}")
 
-                    if resultado == 'sucesso':
-                        resposta = "Obrigado pelo comando"
-                        print('Bot detectou comando')
-                    else:
-                        if resultado == 'ajudar':
-                            resposta = "Por que não tem comando?"
-                            print('Bot detectou comando de ajuda')
-                        elif resultado == 'Najudar':
-                            resposta = "Desculpe-me, não entendi bulunfas do que você escreveu"
-                            print('Bot não detectou nenhum comando')
+                    resposta = ''
+
+                    if resultado[0] == 'agendar':
+                        print("comando agendar detectado")
+                        if "1" in resultado[1]:
+                            print(f"Tem erros: {resultado[1]}")
+                            for ind, mensagem in enumerate(RESPOSTAS_SISTEMA[resultado[0]]['erros']):
+                                if resultado[1][ind] == "1":
+                                    resposta += RESPOSTAS_SISTEMA[resultado[0]]['erros'][ind]
+                                    resposta += RESPOSTAS_SISTEMA[resultado[0]]['ajuda'][ind]
+                        elif resultado[1] == 'falta_agrs':
+                            resposta += 'Não foi possivel completar a tafefa por falta argumentos\nTente colocar: agendar DD/MM/YY ou DD/MM/YYYY | Matéria | Tipo (Prova, Trabalho ou Vazio) | descrição (opcinal)'
+                        else:
+                            resposta += 'Evento salvo com sucesso'
+
+                    elif resultado[0] == 'Najudar':
+                        resposta += 'Não entendi o camando usado\nTente colocar agendar DD/MM/YY ou DD/MM/YYYY | Matéria | Tipo (Prova, Trabalho ou Vazio) | descrição (opcinal)\nver_eventos'
+
+                    print(f"A mensagem que será enviada é: {resposta}")
+
                 
                     barra_texto = driver.find_element(By.XPATH, '//div[@contenteditable="true"][@data-tab="10"]')
                     barra_texto.click()
@@ -105,15 +106,15 @@ try:
                 # Se não houver nada, o bot fica em silêncio
                 pass
         except Exception as e:
+            barra_texto = driver.find_element(By.XPATH, '//div[@contenteditable="true"][@data-tab="10"]')
+            barra_texto.send_keys(Keys.ESCAPE)
             print(f"Erro na patrulha: {e}")
     
 except KeyboardInterrupt:
-    print(bolinha)
     print("Fechando o bot")
 except Exception as Erro:
     print(f"Aconteceu um erro inesperado: {Erro}")
 
-
-cursor.close()
-driver.close()
-conexao.close()
+finally:
+    driver.quit()
+    print("Bot fechado com sucesso")

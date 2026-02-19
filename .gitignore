@@ -3,3 +3,6 @@ cookie/
 cronograma.db
 __pycache__
 .env
+constantes.json
+bd.sql
+deletar-testes.sql
