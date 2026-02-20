@@ -54,8 +54,6 @@ for tentativa in range(3):
 try:
     while entrou:
         sleep(0.07)
-        # Procuramos um SPAN que contenha a palavra 'lida' no seu rótulo de acessibilidade
-            # Isso filtra apenas as notificações reais.
         try:
             notificacoes = driver.find_elements(By.XPATH, "//span[contains(@aria-label, 'lida')]")
 
@@ -72,23 +70,68 @@ try:
                     mensagem = baloes_recebidos[-1].text
                     mensagem = mensagem[:-6]
                     print(f'Pessoa mandou: {mensagem}')
-                    resultado = bot_funcoes.decidir_destino(mensagem.lower())
+
+                    #Essa parte vai pegar o número da pessoa e vai "limpalo"]
+                    #De "+55 11 98765-4321" para "5511987654321"
+                    # 1. Abre o perfil (como você já fez)
+                    seletor_cabecalho = 'header div[title="Dados do perfil"]'
+                    WebDriverWait(driver, 3).until(EC.element_to_be_clickable((By.CSS_SELECTOR, seletor_cabecalho))).click()
+
+                    # 2. Aguarda a barra lateral carregar (importante!)
+                    sleep(5)
+
+                    # 3. SCANNER: Pega todos os elementos que podem ter texto
+                    todos_os_spans = driver.find_elements(By.CSS_SELECTOR, 'span[data-testid="selectable-text"]')
+
+                    nome_capturado = "Não encontrado"
+                    numero_capturado = "Não encontrado"
+
+                    for span in todos_os_spans:
+                        texto = span.text.strip()
+                        
+                        # Se o texto tem um '+', quase certeza que é o número
+                        if '+' in texto and any(char.isdigit() for char in texto):
+                            numero_capturado = texto
+                        
+                        # O primeiro span longo que não tem '+' geralmente é o Nome ou o Recado
+                        # (Você pode ajustar essa lógica para pegar o nome no topo da barra)
+
+                    print(f"DEBUG - Texto Bruto Encontrado: {numero_capturado}")
+
+                    # Agora sim, limpamos
+                    numero_pessoa = "".join(filter(str.isdigit, numero_capturado))
+                    print(f"RESULTADO - Número da pessoa: {numero_pessoa}")
+                    driver.find_element(By.TAG_NAME, 'body').send_keys(Keys.ESCAPE)
+                    
+                    resultado = bot_funcoes.decidir_destino(mensagem.lower(), numero_pessoa)
                     print(f"Função decidir_destino retornou: {resultado}")
 
                     resposta = ''
 
                     if resultado[0] == 'agendar':
                         print("comando agendar detectado")
+
                         if "1" in resultado[1]:
                             print(f"Tem erros: {resultado[1]}")
                             for ind, mensagem in enumerate(RESPOSTAS_SISTEMA[resultado[0]]['erros']):
                                 if resultado[1][ind] == "1":
                                     resposta += RESPOSTAS_SISTEMA[resultado[0]]['erros'][ind]
                                     resposta += RESPOSTAS_SISTEMA[resultado[0]]['ajuda'][ind]
+
                         elif resultado[1] == 'falta_agrs':
                             resposta += 'Não foi possivel completar a tafefa por falta argumentos\nTente colocar: agendar DD/MM/YY ou DD/MM/YYYY | Matéria | Tipo (Prova, Trabalho ou Vazio) | descrição (opcinal)'
+
+                        elif resultado[1] == 'sem_permissão':
+                            resposta += 'Você não tem permissão para usar esse comando'
+                        
                         else:
                             resposta += 'Evento salvo com sucesso'
+                    
+                    elif resultado[0] == 'status':
+                        for infos in resultado[1]:
+                            print(f'Informação sendo colocado na resposta: {infos}')
+                            parte_mensagem_enviara = infos[1]+': '+infos[2]+': '+infos[3]+': '+infos[4]+'\n'
+                            resposta += parte_mensagem_enviara
 
                     elif resultado[0] == 'Najudar':
                         resposta += 'Não entendi o camando usado\nTente colocar agendar DD/MM/YY ou DD/MM/YYYY | Matéria | Tipo (Prova, Trabalho ou Vazio) | descrição (opcinal)\nver_eventos'
@@ -106,8 +149,7 @@ try:
                 # Se não houver nada, o bot fica em silêncio
                 pass
         except Exception as e:
-            barra_texto = driver.find_element(By.XPATH, '//div[@contenteditable="true"][@data-tab="10"]')
-            barra_texto.send_keys(Keys.ESCAPE)
+            driver.find_element(By.TAG_NAME, 'body').send_keys(Keys.ESCAPE)
             print(f"Erro na patrulha: {e}")
     
 except KeyboardInterrupt:

@@ -1,12 +1,16 @@
 import os, sqlite3, json
 from datetime import datetime
-def decidir_destino(texto:str) -> tuple[str, str]:
+from dotenv import load_dotenv
+load_dotenv()
+def decidir_destino(texto:str, numero_celular:str) -> tuple[str, any]:
     print(f"[Função: decidir_destino]")
     print(f"Recebeu {texto}")
-    comandos = ['agendar']
+    comandos = ['agendar', 'status']
     comandos_ajuda = ['ajuda', 'ajudar','h','sos']
     lista_strs = texto.split()
-    ADMINS = os.getenv('ADMINS')
+    comando = comandos[0]
+    numeros = os.getenv('ADMINS')
+    ADMINS = numeros.split(' , ')
     print(f"Mensagem separada como: {lista_strs}")
 
     print(f"Comando da mensagem é: {lista_strs[0]}")
@@ -14,8 +18,11 @@ def decidir_destino(texto:str) -> tuple[str, str]:
     if lista_strs[0] in comandos:
         if lista_strs[0] == comandos[0]:
             print(f"Entrou como comando agendar")
-            comando = comandos[0]
             retorna = ''
+            if not numero_celular in ADMINS:
+                print(f"O número {numero_celular} não é ADMIN")
+                return (comando, 'sem_permissão')
+            print(f"O número {numero_celular} é ADMIN")
             erros = adicionar_bd(texto)
             print(f"Função adicionar_bd retornou: {erros}")
 
@@ -27,6 +34,12 @@ def decidir_destino(texto:str) -> tuple[str, str]:
             print(f"Será retornado: {comando} e {retorna}")
             print("[Acabou a função decidir_destino]")
             return (comando,retorna)
+        elif lista_strs[0] == 'status':
+            comando = comandos[1]
+            print("Buscando eventos")
+            resultados = buscar_eventos()
+            print("[Acabou a função decidir_destino]")
+            return (comando,resultados)
         
     elif lista_strs[0] in comandos_ajuda:
         print("[Acabou a função decidir_destino]")
@@ -86,7 +99,7 @@ def adicionar_bd(texto:str) -> tuple[int]:
             print("Não encontrou a matéria")
             retorna[1] = 1
         
-        if not tipo in ('prova', 'trabalho', 'vazio'):
+        if not tipo in ('prova', 'trabalho', 'vazio', 'trabalho em grupo'):
             print("Não encontrou um tipo valido")
             retorna[2] = 1
 
@@ -104,3 +117,22 @@ def adicionar_bd(texto:str) -> tuple[int]:
     print("Por falta de argumentos, será retornado (-1)")
     print("[Acabou a função adicionar_bd]")
     return [-1]
+
+def buscar_eventos():
+    print('[Função buscar_eventos]')
+    conexao = sqlite3.connect('cronograma.db')
+    print('Conexão feita')
+    curso = conexao.cursor()
+    data = datetime.now().date()
+    try:
+        curso.execute(
+            '''SELECT * FROM eventos
+            WHERE data_evento >= ?
+            ORDER BY data_evento ASC''', (data,)
+        )
+        resultados = curso.fetchall()
+    except Exception as e:
+        print(f'Erro no buscar_eventos: {e}')
+    finally:
+        conexao.close()
+    return resultados
