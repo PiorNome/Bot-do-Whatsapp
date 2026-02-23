@@ -1,14 +1,13 @@
 import os, sqlite3, json
-from datetime import datetime
+from datetime import datetime, date, timedelta
 from dotenv import load_dotenv
 load_dotenv()
 def decidir_destino(texto:str, numero_celular:str) -> tuple[str, any]:
     print(f"[Função: decidir_destino]")
     print(f"Recebeu {texto}")
-    comandos = ['agendar', 'status']
+    comandos = ['agendar', 'status', 'hoje', 'amanha']
     comandos_ajuda = ['ajuda', 'ajudar','h','sos']
     lista_strs = texto.split()
-    comando = comandos[0]
     numeros = os.getenv('ADMINS')
     ADMINS = numeros.split(' , ')
     print(f"Mensagem separada como: {lista_strs}")
@@ -16,7 +15,9 @@ def decidir_destino(texto:str, numero_celular:str) -> tuple[str, any]:
     print(f"Comando da mensagem é: {lista_strs[0]}")
 
     if lista_strs[0] in comandos:
-        if lista_strs[0] == comandos[0]:
+        if lista_strs[0] == 'agendar':
+            comando = 'agendar'
+
             print(f"Entrou como comando agendar")
             retorna = ''
             if not numero_celular in ADMINS:
@@ -34,10 +35,13 @@ def decidir_destino(texto:str, numero_celular:str) -> tuple[str, any]:
             print(f"Será retornado: {comando} e {retorna}")
             print("[Acabou a função decidir_destino]")
             return (comando,retorna)
-        elif lista_strs[0] == 'status':
-            comando = comandos[1]
+        
+        elif lista_strs[0] == 'status' or lista_strs[0] == 'hoje' or lista_strs[0] == 'amanha':
+            comando = lista_strs[0]
+            print(f"O comando usado para ver os eventos foi: \"{comando}\"")
             print("Buscando eventos")
-            resultados = buscar_eventos()
+            resultados = buscar_eventos(comando)
+            print('Eventos pegos')
             print("[Acabou a função decidir_destino]")
             return (comando,resultados)
         
@@ -99,7 +103,7 @@ def adicionar_bd(texto:str) -> tuple[int]:
             print("Não encontrou a matéria")
             retorna[1] = 1
         
-        if not tipo in ('prova', 'trabalho', 'vazio', 'trabalho em grupo'):
+        if not tipo in ('prova', 'trabalho', 'vazio', 'trabalho em grupo', 'atividade', 'lição'):
             print("Não encontrou um tipo valido")
             retorna[2] = 1
 
@@ -118,21 +122,42 @@ def adicionar_bd(texto:str) -> tuple[int]:
     print("[Acabou a função adicionar_bd]")
     return [-1]
 
-def buscar_eventos():
+def buscar_eventos(quando:str=''):
     print('[Função buscar_eventos]')
     conexao = sqlite3.connect('cronograma.db')
     print('Conexão feita')
     curso = conexao.cursor()
-    data = datetime.now().date()
+    
     try:
-        curso.execute(
-            '''SELECT * FROM eventos
-            WHERE data_evento >= ?
-            ORDER BY data_evento ASC''', (data,)
-        )
+        if quando == '' or quando == 'status':
+            data = date.today()
+            print(f"Pegou a viriavel data: {data}")
+            curso.execute(
+                '''SELECT * FROM eventos
+                WHERE data_evento >= ?
+                ORDER BY data_evento ASC''', (data,)
+            )
+        elif quando == 'hoje':
+            hoje = date.today()
+            print(f"Pegou a viriavel hoje: {hoje}")
+            curso.execute(
+                '''SELECT * FROM eventos
+                WHERE data_evento = ?
+                ORDER BY data_evento ASC''', (hoje,)
+            )
+        elif quando == 'amanha':
+            amanha = date.today() + timedelta(days=1)
+            print(f"Pegou a viriavel amanha: {amanha}")
+            curso.execute(
+                '''SELECT * FROM eventos
+                WHERE data_evento = ?
+                ORDER BY data_evento ASC''', (amanha,)
+            )
+        
         resultados = curso.fetchall()
     except Exception as e:
         print(f'Erro no buscar_eventos: {e}')
     finally:
         conexao.close()
+    print('[acabou a função buscar_eventos]')
     return resultados
