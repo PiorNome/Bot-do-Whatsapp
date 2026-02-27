@@ -1,8 +1,5 @@
-"""
-    Pra eu não me perder na lógica: Agr tenho que pegar o número da pessoa e mandar junto com a mensagem dela, e verificar se ela é um dos adimins do grupo.
-"""
-
 import os
+import pyperclip
 import bot_funcoes
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
@@ -22,8 +19,8 @@ chrome_options.add_argument(f"--user-data-dir={localizacao_cookie}")
 
 RESPOSTAS_SISTEMA = {
     'agendar': {
-        'erros': ['Data invalida\n', 'Matéria invalida\n', 'Tipo invalido\n'],
-        'ajuda': ['Formato valido: DD/MM/YY ou DD/MM/YYYY\n', '\n', 'Tipos aceitos: Prova, Trabalho, atividade e Vazio\n']
+        'erros': ['Data invalida', 'Matéria invalida', 'Tipo invalido'],
+        'ajuda': ['Tente esse formato: DD/MM/YY ou DD/MM/YYYY', '', 'Tipos aceitos: Prova, Trabalho, atividade e Vazio']
         }
 }
 
@@ -44,7 +41,6 @@ for tentativa in range(3):
         entrou = True
     except:
         print("Ocorreu um erro: O site demorou demais para carregar ou o QR Code expirou.")
-        driver.quit()
         entrou = False
     finally:
         if entrou:
@@ -52,8 +48,9 @@ for tentativa in range(3):
 
 
 try:
+    resposta = []
     while entrou:
-        sleep(0.07)
+        sleep(0.00056)
         try:
             notificacoes = driver.find_elements(By.XPATH, "//span[contains(@aria-label, 'lida')]")
 
@@ -78,7 +75,7 @@ try:
                     WebDriverWait(driver, 3).until(EC.element_to_be_clickable((By.CSS_SELECTOR, seletor_cabecalho))).click()
 
                     # 2. Aguarda a barra lateral carregar (importante!)
-                    sleep(1.7)
+                    sleep(1.3)
 
                     # 3. SCANNER: Pega todos os elementos que podem ter texto
                     todos_os_spans = driver.find_elements(By.CSS_SELECTOR, 'span[data-testid="selectable-text"]')
@@ -106,8 +103,6 @@ try:
                     resultado = bot_funcoes.decidir_destino(mensagem.lower(), numero_pessoa)
                     print(f"Função decidir_destino retornou: {resultado}")
 
-                    resposta = []
-
                     if resultado[0] == 'agendar':
                         print("comando agendar detectado")
 
@@ -119,8 +114,11 @@ try:
                                     resposta.append(RESPOSTAS_SISTEMA[resultado[0]]['ajuda'][ind])
 
                         elif resultado[1] == 'falta_agrs':
-                            resposta.append('Não foi possivel completar a tafefa por falta argumentos')
-                            resposta.append('Tente colocar nesse formato: agendar DD/MM/YY ou DD/MM/YYYY | Matéria | Tipo (Prova, Trabalho, atividade ou Vazio) | descrição (opcinal)')
+                            resposta.append('Não foi possivel agendar o evento por falta argumentos')
+                            resposta.append('*Como Usar o comando*:')
+                            resposta.append('   *Agendar*: estilo de entrada 》 agendar DD/MM/YY ou DD/MM/YYYY (data) | Matéria | Tipo (Prova, Trabalho, atividade ou Vazio) | descrição (opcinal)')
+                            resposta.append('   *Exemplo de mensagem*: ')
+                            resposta.append('       agendar 31/12/1999|Português|Prova|verbos, Redação, corigas')
 
                         elif resultado[1] == 'sem_permissão':
                             resposta.append('Você não tem permissão para usar esse comando')
@@ -129,35 +127,55 @@ try:
                             resposta.append('Evento salvo com sucesso')
 
                     elif resultado[0] == 'Najudar':
-                        resposta.append('Não entendi o camando usado')
-                        resposta.append('Aqui vão os comandos que temos e como usalos')
-                        resposta.append('   agendar: agendar DD/MM/YY ou DD/MM/YYYY (data) | Matéria | Tipo (Prova, Trabalho, atividade ou Vazio) | descrição (opcinal)')
-                        resposta.append('   status: status (serve para ver todos os eventos que irão ter)')
-                        resposta.append('   hoje: hoje (serve para ver todos os eventos que irão ter hoje)')
-                        resposta.append('   amanha: amanha (serve para ver todos os eventos de amanha)')
+                        resposta.append('Não entendi o comando usado!')
+                        resposta.append('Aqui vão os comandos que temos, e como usa-los.')
+                        resposta.append('   *Agendar*: estilo de entrada》 agendar DD/MM/YY ou DD/MM/YYYY (data) | Matéria | Tipo (Prova, Trabalho, atividade ou Vazio) | descrição (opcinal)')
+                        resposta.append('   *Exemplo de mensagem*: ')
+                        resposta.append('       agendar 12/08/2008|Português|Prova|verbos,Redação,corigas')
+                        resposta.append('')
+                        resposta.append('   *status*: status (serve para ver todos os eventos que irão ter)')
+                        resposta.append('')
+                        resposta.append('   *hoje*: hoje (serve para ver todos os eventos que irão ter hoje)')
+                        resposta.append('')
+                        resposta.append('   *amanhã*: amanhã (serve para ver todos os eventos de amanhã)')
+                        resposta.append('   *Exemplo da resposta dos 3 comandos acima*:')
+                        resposta.append('       🆔 [15] - Física')
+                        resposta.append('       📅 Data: 2026-03-12')
+                        resposta.append('       ✍️ Tipo: Prova')
+                        resposta.append('       📚 O que estudar: Ondas')
+                        resposta.append('       ―――――――――――――――――――――――')
 
-                    elif resultado[0] == 'status' or resultado[0] == 'hoje' or resultado[0] == 'amanha':
+                    elif resultado[0] == 'status' or resultado[0] == 'hoje' or resultado[0] == 'amanha' or resultado[0] == 'amanhã':
                         if resultado[1]: # Resultado[1] = (ID, Data, Matéria, Tipo, Descrição)
                             for infos in resultado[1]:
+                                parte_mensagem_enviara = []
                                 print(f'Informação sendo colocado na resposta: {infos}')
-                                parte_mensagem_enviara = infos[1]+': '+infos[2]+': '+infos[3]+': '+infos[4]
-                                resposta.append(parte_mensagem_enviara)
+                                parte_mensagem_enviara.append(f'🆔[{infos[0]}]' + f' ― {infos[2]}')
+                                parte_mensagem_enviara.append(f'📅Data: {infos[1]}')
+                                parte_mensagem_enviara.append(f'✍️Tipo: {infos[3]}')
+                                resposta.extend(parte_mensagem_enviara)
+                                if infos[4] != 'Vazio':
+                                    resposta.append(f'📚O que estudar: {infos[4]}')
+                                resposta.append('―――――――――――――――――――――――')
+
                         else:
-                            resposta.append("Não à nenhum evento programado")
+                            resposta.append("Não a nenhum evento programado")
 
                     print(f"A mensagem que será enviada é: {resposta}")
 
                     barra_texto = driver.find_element(By.XPATH, '//div[@contenteditable="true"][@data-tab="10"]')
                     barra_texto.click()
 
-                    actions = ActionChains(driver)
-                    for parte in resposta:
-                        actions.send_keys(parte)
-                        actions.key_down(Keys.SHIFT).send_keys(Keys.ENTER).key_up(Keys.SHIFT)
-                    actions.perform()
+                    resposta_final = '\n'.join(resposta)
+                    pyperclip.copy(resposta_final)
+
+                    barra_texto.send_keys(Keys.CONTROL, 'v')
+                    sleep(0.7)
+                    barra_texto.send_keys(Keys.ENTER)
 
                     barra_texto.send_keys(Keys.ENTER)
                     barra_texto.send_keys(Keys.ESCAPE)
+                    del resposta_final, resposta[:]
 
             else:
                 # Se não houver nada, o bot fica em silêncio

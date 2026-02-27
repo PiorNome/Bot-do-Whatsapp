@@ -5,7 +5,7 @@ load_dotenv()
 def decidir_destino(texto:str, numero_celular:str) -> tuple[str, any]:
     print(f"[Função: decidir_destino]")
     print(f"Recebeu {texto}")
-    comandos = ['agendar', 'status', 'hoje', 'amanha']
+    comandos = ['agendar', 'status', 'hoje', 'amanha', 'tutorial']
     comandos_ajuda = ['ajuda', 'ajudar','h','sos']
     lista_strs = texto.split()
     numeros = os.getenv('ADMINS')
@@ -36,7 +36,7 @@ def decidir_destino(texto:str, numero_celular:str) -> tuple[str, any]:
             print("[Acabou a função decidir_destino]")
             return (comando,retorna)
         
-        elif lista_strs[0] == 'status' or lista_strs[0] == 'hoje' or lista_strs[0] == 'amanha':
+        elif lista_strs[0] == 'status' or lista_strs[0] == 'hoje' or lista_strs[0] == 'amanha' or lista_strs[0] == 'amanhã':
             comando = lista_strs[0]
             print(f"O comando usado para ver os eventos foi: \"{comando}\"")
             print("Buscando eventos")
@@ -95,7 +95,7 @@ def adicionar_bd(texto:str) -> tuple[int]:
         encontrou_materia = False
         for materia_key in MATERIAS.keys():
             if materia in MATERIAS[materia_key]:
-                materia = MATERIAS[materia_key][0].title()
+                materia = materia_key
                 encontrou_materia = True
                 print(f"Encontro a matéria: {materia}")
                 break
@@ -103,7 +103,7 @@ def adicionar_bd(texto:str) -> tuple[int]:
             print("Não encontrou a matéria")
             retorna[1] = 1
         
-        if not tipo in ('prova', 'trabalho', 'vazio', 'trabalho em grupo', 'atividade', 'lição'):
+        if not tipo in ('prova', 'trabalho', 'vazio', 'atividade', 'lição'):
             print("Não encontrou um tipo valido")
             retorna[2] = 1
 
@@ -122,7 +122,7 @@ def adicionar_bd(texto:str) -> tuple[int]:
     print("[Acabou a função adicionar_bd]")
     return [-1]
 
-def buscar_eventos(quando:str=''):
+def buscar_eventos(quando:str='') -> list[tuple]:
     print('[Função buscar_eventos]')
     conexao = sqlite3.connect('cronograma.db')
     print('Conexão feita')
@@ -135,7 +135,7 @@ def buscar_eventos(quando:str=''):
             curso.execute(
                 '''SELECT * FROM eventos
                 WHERE data_evento >= ?
-                ORDER BY data_evento ASC''', (data,)
+                ORDER BY data_evento ASC, materia ASC;''', (data,)
             )
         elif quando == 'hoje':
             hoje = date.today()
@@ -143,15 +143,15 @@ def buscar_eventos(quando:str=''):
             curso.execute(
                 '''SELECT * FROM eventos
                 WHERE data_evento = ?
-                ORDER BY data_evento ASC''', (hoje,)
+                ORDER BY data_evento ASC, materia ASC;''', (hoje,)
             )
-        elif quando == 'amanha':
+        elif quando == 'amanha' or quando == 'amanhã':
             amanha = date.today() + timedelta(days=1)
             print(f"Pegou a viriavel amanha: {amanha}")
             curso.execute(
                 '''SELECT * FROM eventos
                 WHERE data_evento = ?
-                ORDER BY data_evento ASC''', (amanha,)
+                ORDER BY data_evento ASC, materia ASC;''', (amanha,)
             )
         
         resultados = curso.fetchall()
