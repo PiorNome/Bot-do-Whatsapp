@@ -1,6 +1,5 @@
 """
     Tenho que adicionar o tutorial
-    E terminar o comando editar no decidir destino
 """
 
 import os, sqlite3, json
@@ -52,13 +51,17 @@ def decidir_destino(texto:str, numero_celular:str) -> tuple[str, any]:
 
         elif lista_strs[0] == 'editar':
             print('Comando "editar" detectado')
+            comando = 'editar'
 
             if not numero_celular in ADMINS:
                 print(f"O número {numero_celular} não é ADMIN")
                 return (comando, 'sem_permissão')
             print('Esse numero é admin')
             print('Indo para a função para editar')
-            resultados = editar_bd(texto)
+            resultado = editar_bd(texto)
+            print(f"a função retornou: {resultado}")
+            print("[Acabou a função decidir_destino]")
+            return (comando, resultado,)
         
     elif lista_strs[0] in comandos_ajuda:
         print("[Acabou a função decidir_destino]")
@@ -178,16 +181,36 @@ def buscar_eventos(quando:str='') -> list[tuple]:
     return resultados
 
 def editar_bd(texto:str):
+    print("[Função editar_bd]")
     infos = texto[6:].split('|')
+    print(f'texto separado: {infos}')
 
     if len(infos) > 3:
+        print('Muitos argumentos')
+        print('[Acabou função editar_bd]')
         return 'muitos_agrs'
     elif len(infos) < 3:
+        print('Poucos argumentos')
+        print('[Acabou função editar_bd]')
         return 'falta_agrs'
 
-    id_evento = infos[0].strip('|')
-    campo_alvo = infos[1].strip('|')
-    novo_valor = infos[2].strip('|')
+    id_evento = infos[0].strip()
+    campo_alvo = infos[1].strip()
+    novo_valor = infos[2].strip()
+    print(f'id = {id_evento}\nCampo alvo = {campo_alvo}\nNovo valor = {novo_valor}')
+
+    conexao = sqlite3.connect('cronograma.db')
+    curso = conexao.cursor()
+    curso.execute(
+        '''SELECT id FROM eventos
+        WHERE id = ?;''', (id_evento,))
+    resultado = curso.fetchall()
+
+    if not resultado:
+        print('Não foi encontrado o id solicitado')
+        conexao.close()
+        print('[Acabou função editar_bd]')
+        return 'id_invalido'
 
     if campo_alvo in ('data_evento', 'data', 'evento_data','evento',):
         formatos = ("%d/%m/%y", "%d/%m/%Y")
@@ -201,96 +224,69 @@ def editar_bd(texto:str):
                 print("Data valida")
             except:
                 print("Data invalida")
-                return 'data_invalida'
-        
-        conexao = sqlite3.connect('cronograma.db')
-        curso = conexao.cursor()
-        curso.execute(
-            '''SELECT id FROM eventos
-            WHERE id = ?;''', (id_evento,))
-        resultado = curso.fetchall()
-
-        if not resultado:
-            conexao.close()
-            return 'id_nao_encontrado'
+                print('[Acabou função editar_bd]')
+                return 'data_invalido'
         
         curso.execute(
             '''UPDATE eventos SET data_evento = ?
             WHERE id = ?''', (data_objeto.date(), id_evento,))
         conexao.commit()
         conexao.close()
+        print('Edição feito com sucesso')
+        print('[Acabou função editar_bd]')
         return 'sucesso_data'
     
-    if campo_alvo in ('materia','matéria'):
+    if campo_alvo in ('materia','matéria',):
         with open('constantes.json', 'r', encoding='utf-8') as f:
             MATERIAS:dict = json.load(f)
+        print('Matérias pegas')
         
         materia_pega = False
         for materia_corretor in MATERIAS.keys():
             if novo_valor in MATERIAS[materia_corretor]:
                 materia = materia_corretor
                 materia_pega = True
+                print(f'A matéria é {materia}')
                 break
 
         if not materia_pega:
-            return 'materia_invalida'
-        
-        conexao = sqlite3.connect('cronograma.db')
-        curso = conexao.cursor()
-        curso.execute(
-            '''SELECT id FROM eventos
-            WHERE id = ?;''', (id_evento,))
-        resultado = curso.fetchall()
-
-        if not resultado:
-            conexao.close()
-            return 'id_nao_encontrado'
+            print('Não foi encontrada a matéria desejada')
+            print('[Acabou função editar_bd]')
+            return 'materia_invalido'
         
         curso.execute(
             '''UPDATE eventos SET materia = ?
             WHERE id = ?''', (materia, id_evento,))
         conexao.commit()
         conexao.close()
+        print('Edição feito com sucesso')
+        print('[Acabou função editar_bd]')
         return 'sucesso_materia'
     
     if campo_alvo in ('tipo',):
-        if not novo_valor in ('prova', 'trabalho', 'atividade', 'Vazio'):
+        if not novo_valor in ('prova', 'trabalho', 'atividade', 'vazio'):
+            print('Não foi encontrado o tipo')
+            print('[Acabou função editar_bd]')
             return 'tipo_invalido'
-        
-        conexao = sqlite3.connect('cronograma.db')
-        curso = conexao.cursor()
-        curso.execute(
-            '''SELECT id FROM eventos
-            WHERE id = ?;''', (id_evento,))
-        resultado = curso.fetchall()
-
-        if not resultado:
-            conexao.close()
-            return 'id_nao_encontrado'
         
         curso.execute(
             '''UPDATE eventos SET tipo = ?
-            WHERE id = ?''', (novo_valor, id_evento,))
+            WHERE id = ?''', (novo_valor.title(), id_evento,))
         conexao.commit()
         conexao.close()
+        print('Edição feito com sucesso')
+        print('[Acabou função editar_bd]')
         return 'sucesso_tipo'
     
     if campo_alvo in ('descrição', 'descriçao', 'descricão', 'descricao',):
-
-        conexao = sqlite3.connect('cronograma.db')
-        curso = conexao.cursor()
-        curso.execute(
-            '''SELECT id FROM eventos
-            WHERE id = ?;''', (id_evento,))
-        resultado = curso.fetchall()
-
-        if not resultado:
-            conexao.close()
-            return 'id_nao_encontrado'
-        
+        print('Entrou no caso de Descrição')
         curso.execute(
             '''UPDATE eventos SET descricao = ?
             WHERE id = ?''', (novo_valor, id_evento,))
         conexao.commit()
         conexao.close()
+        print('Edição feito com sucesso')
+        print('[Acabou função editar_bd]')
         return 'sucesso_descricao'
+    print('Se por algum acaso, esse print aparecer, é porque deu um bug')
+    print('\033[31mRESOLVA\033[0m')

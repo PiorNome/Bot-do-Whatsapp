@@ -1,6 +1,5 @@
 '''
-    Adicionar o comando editar aqui, e terminar no bot_funçoes
-    Adicionar o tutorial aqui, terminar no bot_funçoes
+   Adicionar o tutorial aqui, terminar no bot_funçoes
 '''
 
 import os
@@ -165,6 +164,35 @@ try:
 
                         else:
                             resposta.append("Não a nenhum evento programado")
+                    
+                    elif resultado[0] == 'editar':
+                        # Primeiro ele vê se deu sucesso, depois se deu errado
+                        if 'sucesso' in resultado[1]:
+                            bot_funcoes.editar_bd
+                            if resultado[1] == 'sucesso_data':
+                                resposta.append('Sucesso ao editar a data')
+                            elif resultado[1] == 'sucesso_materia':
+                                resposta.append('Sucesso ao editar a matéria')
+                            elif resultado[1] == 'sucesso_tipo':
+                                resposta.append('Sucesso ao editar o tipo do evento')
+                            elif resultado[1] == 'sucesso_descricao':
+                                resposta.append('Sucesso ao editar a descrição')
+                        
+                        elif 'invalido' in resultado[1]:
+                            if resultado[1] == 'id_invalido':
+                                resposta.append('O id que você digitou é invalido')
+                            elif resultado[1] == 'data_invalido':
+                                resposta.append('A data que você digitou é invalida')
+                            elif resultado[1] == 'materia_invalido':
+                                resposta.append('A matéria que você digitou é invalida')
+                            elif resultado[1] == 'tipo_invalido':
+                                resposta.append('O tipo que você digitou é invalida')
+                        
+                        else: # Aqui vai ficar os casos de muitos argumentou e os poucos argumentos
+                            if resultado[1] == 'muitos_agrs':
+                                resposta.append('Você colocou mais informações do que deveria')
+                            elif resultado[1] == 'falta_agrs':
+                                resposta.append('Você colocou menos informações que deveria')
 
                     print(f"A mensagem que será enviada é: {resposta}")
 
