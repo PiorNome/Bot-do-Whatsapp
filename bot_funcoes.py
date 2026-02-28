@@ -178,7 +178,7 @@ def buscar_eventos(quando:str='') -> list[tuple]:
     return resultados
 
 def editar_bd(texto:str):
-    infos = texto[6:].split()
+    infos = texto[6:].split('|')
 
     if len(infos) > 3:
         return 'muitos_agrs'
