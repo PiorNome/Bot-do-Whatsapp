@@ -1,6 +1,7 @@
 venv/
 cookie/
 cronograma.db
+cronograma*
 __pycache__
 .env
 constantes.json

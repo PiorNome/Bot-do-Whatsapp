@@ -1,3 +1,8 @@
+'''
+    Adicionar o comando editar aqui, e terminar no bot_funçoes
+    Adicionar o tutorial aqui, terminar no bot_funçoes
+'''
+
 import os
 import pyperclip
 import bot_funcoes
