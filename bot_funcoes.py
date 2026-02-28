@@ -178,7 +178,7 @@ def buscar_eventos(quando:str='') -> list[tuple]:
     return resultados
 
 def editar_bd(texto:str):
-    infos = texto[6:].split()
+    infos = texto[6:].split('|')
 
     if len(infos) > 3:
         return 'muitos_agrs'
@@ -222,7 +222,7 @@ def editar_bd(texto:str):
         return 'sucesso_data'
     
     if campo_alvo in ('materia','matéria'):
-        with open('cronograma.db', 'r', encoding='utf-8') as f:
+        with open('constantes.json', 'r', encoding='utf-8') as f:
             MATERIAS:dict = json.load(f)
         
         materia_pega = False
