@@ -1,7 +1,3 @@
-'''
-   Adicionar o tutorial aqui, terminar no bot_funçoes
-'''
-
 import os
 import pyperclip
 import bot_funcoes
@@ -193,6 +189,97 @@ try:
                                 resposta.append('Você colocou mais informações do que deveria')
                             elif resultado[1] == 'falta_agrs':
                                 resposta.append('Você colocou menos informações que deveria')
+                    
+                    elif resultado[0] == 'tutorial':
+                        # Primeiro vai verivicar se a pessoa pediu só "tutorial"
+                        # Depois vai verificar se o segundo argumento é um comando invalido "tutorial comando_não_existente"
+                        # E por ultimo vai verificar se o segundo argumento é um comando valido "tutorial agendar"
+                        if resultado[1] is None:
+                            resposta.append("Aqui vai o tutorial de como me usar")
+                            resposta.append("Uma dica, você pode usar \"tutorial [comando]\" para sabe mais sobre algum comando especifico")
+                            resposta.append("")
+                            resposta.append("Como me usar?")
+                            resposta.append("   agendar [data] | [materia] | [tipo] | [descrição(opcinal)]")
+                            resposta.append("   editar [id] | [o campo que você que mudar] | [o valor que você quer]")
+                            resposta.append("   status")
+                            resposta.append("   hoje")
+                            resposta.append("   amanha")
+                            resposta.append('―――――――――――――――――――――――')
+                            resposta.append("obs: Não coloque as informações dentro de colchetes")
+                        
+                        elif resultado[1] == 'nao_encontrado':
+                            resposta.append("Não entendi o comando que você queria ajuda")
+                            resposta.append("")
+                            resposta.append("*Como me usar?*")
+                            resposta.append("   agendar [data] | [materia] | [tipo] | [descrição(opcinal)]")
+                            resposta.append("   editar [id] | [o campo que você que mudar] | [o valor que você quer]")
+                            resposta.append("   status")
+                            resposta.append("   hoje")
+                            resposta.append("   amanha")
+                            resposta.append('―――――――――――――――――――――――')
+                            resposta.append("obs: Não coloque as informações dentro de colchetes")
+
+                        elif resultado[1] in ('agendar', 'status', 'hoje', 'amanha', 'amanhã', 'editar', 'tutorial',):
+                            if resultado[1] == 'agendar':
+                                resposta.append("Com o comando *agendar*, você registra uma nova atividade no seu cronograma.")
+                                resposta.append("Para usar o comando *agendar* você precisa ser *ADMIN*")
+                                resposta.append("*Como usar?*")
+                                resposta.append("   agendar [data] | [materia] | [tipo] | [descrição(opcinal)]")
+                                resposta.append("―――――――――――――――――――――――")
+                                resposta.append("Dicas: ")
+                                resposta.append("   Na *data* escreva dessa forma *DD/MM/YY* ou *DD/MM/YYYY*")
+                                resposta.append("   Na *matéria*, é aceito alguns erros de escrita, como faltar um acento em alguma letra")
+                                resposta.append("   Ainda na matéria, você pode escrever as abreviações que estão no suap")
+                                resposta.append("   No *tipo* só será aceito algum desses *Prova, trabalho, atividade ou Vazio*")
+                                resposta.append('   Na *descrição*, você pode escrever o que quiser ou simplesmente deixar em branco.')
+
+                            elif resultado[1] == 'status':
+                                resposta.append("Com o comando *status* você *tudo* o que está por vir")
+                                resposta.append("*Como usar?*")
+                                resposta.append("   status")
+                                resposta.append("―――――――――――――――――――――――")
+                                resposta.append("obs: Para usar você realmente só escreve \"Status\"")
+
+                            elif resultado[1] == 'hoje':
+                                resposta.append("Com o comando *hoje* você *tudo* que vai ter *hoje*")
+                                resposta.append("*Como usar?*")
+                                resposta.append("   hoje")
+                                resposta.append("―――――――――――――――――――――――")
+                                resposta.append("obs: Para usar você realmente só escreve \"Hoje\"")
+
+                            elif resultado[1] == 'amanha' or resultado[1] == 'amanhã':
+                                resposta.append("Com o comando *amanha* você *tudo* que vai ter *amanhã*")
+                                resposta.append("*Como usar?*")
+                                resposta.append("   amanha")
+                                resposta.append("―――――――――――――――――――――――")
+                                resposta.append("Dica: É aceito *amanha* ou *amanhã*")
+                                resposta.append("―――――――――――――――――――――――")
+                                resposta.append("obs: Para usar você realmente só escreve \"Amanha\"")
+
+                            elif resultado[1] == 'editar':
+                                resposta.append("Com o comando *editar* você pode editar um evento que foi salvo")
+                                resposta.append("Para usar o comando *editar* você precisa ser *ADMIN*")
+                                resposta.append("*Como usar?*")
+                                resposta.append("   editar [ID] | [campo] | [valor]")
+                                resposta.append("―――――――――――――――――――――――")
+                                resposta.append("Dica:")
+                                resposta.append("   Use o comando *\"status\"* para saber o ID do evento")
+                                resposta.append("   No *campo*, você escreve o que você quer mudar, pode-ser data, matéria, tipo ou descrição")
+                                resposta.append("> Use o comando \"tutorial agendar\" para saber os tipos validos")
+                                resposta.append("   No *valor*, você escreve a nova informação que deve entrar no lugar.")
+
+
+                            elif resultado[1] == 'tutorial':
+                                resposta.append("Com o comando *tutorial* você pode ver como usar os outros comandos")
+                                resposta.append("*Como usar?*")
+                                resposta.append("   tutorial")
+                                resposta.append("   tutorial [comando]")
+                                resposta.append("―――――――――――――――――――――――")
+                                resposta.append("Dica:")
+                                resposta.append("   Se você usar só \"*tutorial*\", você irar ver um tutorial basico de cada comando")
+                                resposta.append("   Se você usar \"tutorial [comando]\", você irar ver um tutorial mais completo do comando especificado")
+                                resposta.append("> Use \"*tutorial*\" para ver os comandos existentes")
+
 
                     print(f"A mensagem que será enviada é: {resposta}")
 

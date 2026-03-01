@@ -1,7 +1,3 @@
-"""
-    Tenho que adicionar o tutorial
-"""
-
 import os, sqlite3, json
 from datetime import datetime, date, timedelta
 from dotenv import load_dotenv
@@ -62,6 +58,25 @@ def decidir_destino(texto:str, numero_celular:str) -> tuple[str, any]:
             print(f"a função retornou: {resultado}")
             print("[Acabou a função decidir_destino]")
             return (comando, resultado,)
+        
+        elif lista_strs[0] == 'tutorial':
+            print("Comando tutorial detectado")
+            comando = 'tutorial'
+
+            if len(lista_strs) > 1:
+                print(f"Tem outro comando: {lista_strs[1]}")
+
+                if lista_strs[1] in comandos:
+                    print("Acho o segundo comando")
+                    print("[Acabou a função decidir_destino]")
+                    return (comando, lista_strs[1],)
+                
+                print('segundo comando não encontrado')
+                print("[Acabou a função decidir_destino]")
+                return (comando, 'nao_encontrado',)
+            
+            print("[Acabou a função decidir_destino]")
+            return (comando, None,)
         
     elif lista_strs[0] in comandos_ajuda:
         print("[Acabou a função decidir_destino]")
