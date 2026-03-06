@@ -1,6 +1,7 @@
 import os
 import pyperclip
 import bot_funcoes
+import random
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
@@ -16,6 +17,9 @@ chrome_options = Options()
 caminho_atual = os.getcwd()
 localizacao_cookie = os.path.join(caminho_atual, "cookie")
 chrome_options.add_argument(f"--user-data-dir={localizacao_cookie}")
+chrome_options.add_argument("--headless") # O segredo está aqui!
+chrome_options.add_argument("--no-sandbox") # Necessário para rodar em servidores Linux
+chrome_options.add_argument("--disable-dev-shm-usage") # Evita erros de memória na VM
 
 RESPOSTAS_SISTEMA = {
     'agendar': {
@@ -290,16 +294,32 @@ try:
                     barra_texto = driver.find_element(By.XPATH, '//div[@contenteditable="true"][@data-tab="10"]')
                     barra_texto.click()
 
-                    resposta_final = '\n'.join(resposta)
-                    pyperclip.copy(resposta_final)
+                    #driver.execute_script("arguments[0].innerText = arguments[1];", barra_texto, mensagem)
+                    #barra_texto.send_keys(Keys.SPACE)
 
-                    barra_texto.send_keys(Keys.CONTROL, 'v')
-                    sleep(0.7)
+                    action = ActionChains(driver)
+                    for linha in resposta:
+                        for letra in linha:
+                            
+                            if ord(letra) > 0xffff:
+                                driver.execute_script("arguments[0].innerText += arguments[1];", barra_texto, letra)
+                            
+                            else:
+                                barra_texto.send_keys(letra)
+
+                            #sleep(random.uniform(0.1, 0.3))
+                        action.key_down(Keys.SHIFT).send_keys(Keys.ENTER).key_up(Keys.SHIFT).perform()
+
+                    #resposta_final = '\n'.join(resposta)
+                    #pyperclip.copy(resposta_final)
+
+                    #barra_texto.send_keys(Keys.CONTROL, 'v')
+                    #sleep(0.7)
                     barra_texto.send_keys(Keys.ENTER)
 
                     barra_texto.send_keys(Keys.ENTER)
                     barra_texto.send_keys(Keys.ESCAPE)
-                    del resposta_final, resposta[:]
+                    del  resposta[:]#, resposta_final
 
             else:
                 # Se não houver nada, o bot fica em silêncio
