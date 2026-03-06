@@ -6,7 +6,6 @@ def decidir_destino(texto:str, numero_celular:str) -> tuple[str, any]:
     print(f"[Função: decidir_destino]")
     print(f"Recebeu {texto}")
     comandos = ['agendar', 'status', 'hoje', 'amanha', 'amanhã', 'tutorial', 'editar']
-    comandos_ajuda = ['ajuda', 'ajudar','h','sos']
     lista_strs = texto.split()
     numeros = os.getenv('ADMINS')
     ADMINS = numeros.split(' , ')
@@ -77,10 +76,6 @@ def decidir_destino(texto:str, numero_celular:str) -> tuple[str, any]:
             
             print("[Acabou a função decidir_destino]")
             return (comando, None,)
-        
-    elif lista_strs[0] in comandos_ajuda:
-        print("[Acabou a função decidir_destino]")
-        return ('ajudar', None)
     
     print("[Acabou a função decidir_destino]")
     return ('Najudar', None)
