@@ -74,8 +74,20 @@ print("Acessando o WhatsApp Web...")
 driver.get("https://web.whatsapp.com")
 sleep(10) # Aguarda o carregamento da página
 
-driver.save_screenshot("qrcode.png")
-print("✅ QR Code salvo! Acesse o link do Render para escanear.")
+try:
+    # Espera até 60 segundos para o elemento 'canvas' (onde fica o QR Code) aparecer
+    wait = WebDriverWait(driver, 60)
+    wait.until(EC.presence_of_element_located((By.TAG_NAME, "canvas")))
+    
+    # Dá mais 5 segundos extras para garantir que o QR Code desenhou completamente
+    sleep(10) 
+    
+    driver.save_screenshot("qrcode.png")
+    print("✅ QR Code capturado com sucesso! Verifique o link agora.")
+except Exception as e:
+    print(f"❌ O QR Code não carregou a tempo: {e}")
+    driver.save_screenshot("erro_carregamento.png")
+
 entrou = False
 for tentativa in range(3):
     if entrou:
