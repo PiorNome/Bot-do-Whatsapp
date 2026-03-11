@@ -14,23 +14,14 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.keys import Keys
 from time import sleep
-# Configurações para não precisar de QR Code toda hora
-chrome_options = Options()
-caminho_atual = os.getcwd()
-localizacao_cookie = os.path.join(caminho_atual, "cookie")
-chrome_options.add_argument(f"--user-data-dir={localizacao_cookie}")
-chrome_options.add_argument("--headless") # O segredo está aqui!
-chrome_options.add_argument("--no-sandbox") # Necessário para rodar em servidores Linux
-chrome_options.add_argument("--disable-dev-shm-usage") # Evita erros de memória na VM
-chrome_options.add_argument('--headless') # Roda sem janela
-chrome_options.add_argument('--no-sandbox')
-chrome_options.add_argument('--disable-dev-shm-usage')
-chrome_options.add_argument('--window-size=1920,1080') # Garante que o print pegue o QR Code inteiro
 
-# Se você usou o meu script render-build.sh, o caminho do binary é:
-chrome_options.binary_location = "/opt/render/project/.render/chrome/opt/google/chrome/google-chrome"
-
+# ==========================================
+# 1. CONFIGURAÇÃO DO SERVIDOR WEB (FLASK)
+# ==========================================
 app = Flask(__name__)
+# Pega a porta dinâmica do Render ou usa a 10000 por padrão
+port = int(os.environ.get("PORT", 10000))
+
 @app.route('/')
 def show_qr():
     if os.path.exists("qrcode.png"):
@@ -38,12 +29,30 @@ def show_qr():
     return "QR Code ainda não gerado. Aguarde alguns segundos e atualize a página."
 
 def run_flask():
-    # O Render usa a porta 10000 por padrão
-    app.run(host='0.0.0.0', port=10000)
+    app.run(host='0.0.0.0', port=port)
 
 # Inicia o servidor em uma thread separada para não travar o bot
 threading.Thread(target=run_flask, daemon=True).start()
 
+# ==========================================
+# 2. CONFIGURAÇÕES DO SELENIUM E CHROME
+# ==========================================
+chrome_options = Options()
+caminho_atual = os.getcwd()
+localizacao_cookie = os.path.join(caminho_atual, "cookie")
+
+chrome_options.add_argument(f"--user-data-dir={localizacao_cookie}")
+chrome_options.add_argument("--headless=new") # Atualizado para melhor performance
+chrome_options.add_argument("--no-sandbox") 
+chrome_options.add_argument("--disable-dev-shm-usage") 
+chrome_options.add_argument('--window-size=1920,1080') 
+
+# O caminho do Chrome instalado pelo script no Render:
+chrome_options.binary_location = "/opt/render/project/.render/chrome/opt/google/chrome/google-chrome"
+
+# ==========================================
+# 3. VARIÁVEIS E FUNÇÕES DO BOT
+# ==========================================
 RESPOSTAS_SISTEMA = {
     'agendar': {
         'erros': ['Data invalida', 'Matéria invalida', 'Tipo invalido'],
@@ -52,15 +61,16 @@ RESPOSTAS_SISTEMA = {
 }
 
 
-# Inicia o navegador
+print("Iniciando o Chrome...")
 servico = Service(ChromeDriverManager().install())
 driver = webdriver.Chrome(service=servico, options=chrome_options)
 
-# Abre o WhatsApp Web
+print("Acessando o WhatsApp Web...")
 driver.get("https://web.whatsapp.com")
 sleep(10) # Aguarda o carregamento da página
+
 driver.save_screenshot("qrcode.png")
-print("QR Code salvo! Verifique o link do Render.")
+print("✅ QR Code salvo! Acesse o link do Render para escanear.")
 for tentativa in range(3):
     try:
         # Espera até 60 segundos (tempo bom para dar tempo de ler o QR Code)
