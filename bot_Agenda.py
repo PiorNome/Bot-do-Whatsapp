@@ -62,8 +62,13 @@ RESPOSTAS_SISTEMA = {
 
 
 print("Iniciando o Chrome...")
-servico = Service(ChromeDriverManager().install())
-driver = webdriver.Chrome(service=servico, options=chrome_options)
+try:
+    driver = webdriver.Chrome(service=service, options=chrome_options)
+    print("✅ Navegador iniciado com sucesso!")
+except Exception as e:
+    print(f"❌ Erro ao iniciar o navegador: {e}")
+    # Fallback caso o manager falhe: tentar iniciar sem o service manual
+    driver = webdriver.Chrome(options=chrome_options)
 
 print("Acessando o WhatsApp Web...")
 driver.get("https://web.whatsapp.com")
@@ -92,10 +97,12 @@ try:
     while entrou:
         sleep(0.00056)
         try:
-            notificacoes = driver.find_elements(By.XPATH, "//span[contains(@aria-label, 'lida')]")
+            notificacao = driver.find_elements(By.XPATH, "//span[contains(@aria-label, 'lida')]")
 
-            if len(notificacoes) > 0:
+            if len(notificacao) > 0:
                 # Pegamos a última bolinha da lista (geralmente as mais recentes ficam embaixo)
+                sleep(2)
+                notificacoes = driver.find_elements(By.XPATH, "//span[contains(@aria-label, 'lida')]")
                 bolinha = notificacoes[-1]
                 
                 # Movemos o mouse até a bolinha e clicamos (mais seguro que o .click direto)
