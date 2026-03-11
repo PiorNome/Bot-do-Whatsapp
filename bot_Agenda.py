@@ -2,6 +2,8 @@ import os
 import pyperclip
 import bot_funcoes
 import random
+from flask import Flask, send_file
+import threading
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
@@ -20,6 +22,27 @@ chrome_options.add_argument(f"--user-data-dir={localizacao_cookie}")
 chrome_options.add_argument("--headless") # O segredo está aqui!
 chrome_options.add_argument("--no-sandbox") # Necessário para rodar em servidores Linux
 chrome_options.add_argument("--disable-dev-shm-usage") # Evita erros de memória na VM
+chrome_options.add_argument('--headless') # Roda sem janela
+chrome_options.add_argument('--no-sandbox')
+chrome_options.add_argument('--disable-dev-shm-usage')
+chrome_options.add_argument('--window-size=1920,1080') # Garante que o print pegue o QR Code inteiro
+
+# Se você usou o meu script render-build.sh, o caminho do binary é:
+chrome_options.binary_location = "/opt/render/project/.render/chrome/opt/google/chrome/google-chrome"
+
+app = Flask(__name__)
+@app.route('/')
+def show_qr():
+    if os.path.exists("qrcode.png"):
+        return send_file("qrcode.png", mimetype='image/png')
+    return "QR Code ainda não gerado. Aguarde alguns segundos e atualize a página."
+
+def run_flask():
+    # O Render usa a porta 10000 por padrão
+    app.run(host='0.0.0.0', port=10000)
+
+# Inicia o servidor em uma thread separada para não travar o bot
+threading.Thread(target=run_flask, daemon=True).start()
 
 RESPOSTAS_SISTEMA = {
     'agendar': {
@@ -35,6 +58,9 @@ driver = webdriver.Chrome(service=servico, options=chrome_options)
 
 # Abre o WhatsApp Web
 driver.get("https://web.whatsapp.com")
+sleep(10) # Aguarda o carregamento da página
+driver.save_screenshot("qrcode.png")
+print("QR Code salvo! Verifique o link do Render.")
 for tentativa in range(3):
     try:
         # Espera até 60 segundos (tempo bom para dar tempo de ler o QR Code)
