@@ -4,7 +4,6 @@ cronograma.db
 cronograma*
 __pycache__
 .env
-constantes.json
 bd.sql
 deletar-testes.sql
 cronograma.sqbpro
