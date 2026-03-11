@@ -71,7 +71,10 @@ sleep(10) # Aguarda o carregamento da página
 
 driver.save_screenshot("qrcode.png")
 print("✅ QR Code salvo! Acesse o link do Render para escanear.")
+entrou = False
 for tentativa in range(3):
+    if entrou:
+        continue
     try:
         # Espera até 60 segundos (tempo bom para dar tempo de ler o QR Code)
         elemento = WebDriverWait(driver, 60).until(
@@ -82,9 +85,6 @@ for tentativa in range(3):
     except:
         print("Ocorreu um erro: O site demorou demais para carregar ou o QR Code expirou.")
         entrou = False
-    finally:
-        if entrou:
-            break
 
 
 try:
