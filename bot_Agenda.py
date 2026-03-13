@@ -47,6 +47,8 @@ chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage") 
 chrome_options.add_argument('--window-size=1920,1080') 
 
+service = Service(ChromeDriverManager().install())
+
 # O caminho do Chrome instalado pelo script no Render:
 chrome_options.binary_location = "/opt/render/project/.render/chrome/opt/google/chrome/google-chrome"
 
