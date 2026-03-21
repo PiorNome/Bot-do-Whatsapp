@@ -49,6 +49,8 @@ chrome_options.add_argument("--disable-dev-shm-usage")
 
 service = Service(ChromeDriverManager().install())
 
+service = Service(ChromeDriverManager().install())
+
 # O caminho do Chrome instalado pelo script no Render:
 #chrome_options.binary_location = "/opt/render/project/.render/chrome/opt/google/chrome/google-chrome"
 
