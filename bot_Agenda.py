@@ -18,21 +18,21 @@ from time import sleep
 # ==========================================
 # 1. CONFIGURAÇÃO DO SERVIDOR WEB (FLASK)
 # ==========================================
-app = Flask(__name__)
+#app = Flask(__name__)
 # Pega a porta dinâmica do Render ou usa a 10000 por padrão
-port = int(os.environ.get("PORT", 10000))
+#port = int(os.environ.get("PORT", 10000))
 
-@app.route('/')
-def show_qr():
-    if os.path.exists("qrcode.png"):
-        return send_file("qrcode.png", mimetype='image/png')
-    return "QR Code ainda não gerado. Aguarde alguns segundos e atualize a página."
+#@app.route('/')
+#def show_qr():
+#    if os.path.exists("qrcode.png"):
+#        return send_file("qrcode.png", mimetype='image/png')
+#    return "QR Code ainda não gerado. Aguarde alguns segundos e atualize a página."
 
-def run_flask():
-    app.run(host='0.0.0.0', port=port)
+#def run_flask():
+#    app.run(host='0.0.0.0', port=port)
 
 # Inicia o servidor em uma thread separada para não travar o bot
-threading.Thread(target=run_flask, daemon=True).start()
+#threading.Thread(target=run_flask, daemon=True).start()
 
 # ==========================================
 # 2. CONFIGURAÇÕES DO SELENIUM E CHROME
@@ -42,13 +42,15 @@ caminho_atual = os.getcwd()
 localizacao_cookie = os.path.join(caminho_atual, "cookie")
 
 chrome_options.add_argument(f"--user-data-dir={localizacao_cookie}")
-chrome_options.add_argument("--headless=new") # Atualizado para melhor performance
+#chrome_options.add_argument("--headless=new") # Atualizado para melhor performance
 chrome_options.add_argument("--no-sandbox") 
 chrome_options.add_argument("--disable-dev-shm-usage") 
-chrome_options.add_argument('--window-size=1920,1080') 
+#chrome_options.add_argument('--window-size=1920,1080') 
+
+service = Service(ChromeDriverManager().install())
 
 # O caminho do Chrome instalado pelo script no Render:
-chrome_options.binary_location = "/opt/render/project/.render/chrome/opt/google/chrome/google-chrome"
+#chrome_options.binary_location = "/opt/render/project/.render/chrome/opt/google/chrome/google-chrome"
 
 # ==========================================
 # 3. VARIÁVEIS E FUNÇÕES DO BOT
@@ -72,21 +74,21 @@ except Exception as e:
 
 print("Acessando o WhatsApp Web...")
 driver.get("https://web.whatsapp.com")
-sleep(10) # Aguarda o carregamento da página
+sleep(6) # Aguarda o carregamento da página
 
-try:
-    # Espera até 60 segundos para o elemento 'canvas' (onde fica o QR Code) aparecer
-    wait = WebDriverWait(driver, 60)
-    wait.until(EC.presence_of_element_located((By.TAG_NAME, "canvas")))
+#try:
+#    # Espera até 60 segundos para o elemento 'canvas' (onde fica o QR Code) aparecer
+#    wait = WebDriverWait(driver, 60)
+#    wait.until(EC.presence_of_element_located((By.TAG_NAME, "canvas")))
     
     # Dá mais 5 segundos extras para garantir que o QR Code desenhou completamente
-    sleep(10) 
+#    sleep(5) 
     
-    driver.save_screenshot("qrcode.png")
-    print("✅ QR Code capturado com sucesso! Verifique o link agora.")
-except Exception as e:
-    print(f"❌ O QR Code não carregou a tempo: {e}")
-    driver.save_screenshot("erro_carregamento.png")
+#    driver.save_screenshot("qrcode.png")
+#    print("✅ QR Code capturado com sucesso! Verifique o link agora.")
+#except Exception as e:
+#    print(f"❌ O QR Code não carregou a tempo: {e}")
+#    driver.save_screenshot("erro_carregamento.png")
 
 entrou = False
 for tentativa in range(3):
@@ -227,29 +229,38 @@ try:
                         if 'sucesso' in resultado[1]:
                             bot_funcoes.editar_bd
                             if resultado[1] == 'sucesso_data':
-                                resposta.append('Sucesso ao editar a data')
+                                resposta.append('Sucesso ao editar a data🌟')
                             elif resultado[1] == 'sucesso_materia':
-                                resposta.append('Sucesso ao editar a matéria')
+                                resposta.append('Sucesso ao editar a matéria🌟')
                             elif resultado[1] == 'sucesso_tipo':
-                                resposta.append('Sucesso ao editar o tipo do evento')
+                                resposta.append('Sucesso ao editar o tipo do evento🌟')
                             elif resultado[1] == 'sucesso_descricao':
-                                resposta.append('Sucesso ao editar a descrição')
+                                resposta.append('Sucesso ao editar a descrição🌟')
                         
                         elif 'invalido' in resultado[1]:
                             if resultado[1] == 'id_invalido':
-                                resposta.append('O id que você digitou é invalido')
+                                resposta.append('❌O id que você digitou é invalido')
+                                resposta.append('Use o comando *status* para saber o id dos eventos')
                             elif resultado[1] == 'data_invalido':
-                                resposta.append('A data que você digitou é invalida')
+                                resposta.append('❌A data que você digitou é invalida')
+                                resposta.append('Digite a data em um desses formatos DD/MM/YY ou DD/MM/YYYY')
                             elif resultado[1] == 'materia_invalido':
-                                resposta.append('A matéria que você digitou é invalida')
+                                resposta.append('❌A matéria que você digitou é invalida')
+                                resposta.append('Olhe no suap para saber as matérias')
                             elif resultado[1] == 'tipo_invalido':
-                                resposta.append('O tipo que você digitou é invalida')
+                                resposta.append('❌O tipo que você digitou é invalida')
+                                resposta.append('Os tipos validos são: Prova, atividade, trabalho ou lição')
+                            elif resultado[1] == 'campo_invalido':
+                                resposta.append('❌O campo que você queria mudar é invalido')
+                                resposta.append('Os campos aceitos são: data, tipo ou matéria')
                         
                         else: # Aqui vai ficar os casos de muitos argumentou e os poucos argumentos
                             if resultado[1] == 'muitos_agrs':
-                                resposta.append('Você colocou mais informações do que deveria')
+                                resposta.append('❌Você colocou mais informações do que deveria')
+                                resposta.append('coloque dessa forma "editar [ID do evento] | [campo que você quer alterar] | [novo valor que você quer]"')
                             elif resultado[1] == 'falta_agrs':
-                                resposta.append('Você colocou menos informações que deveria')
+                                resposta.append('❌Você colocou menos informações que deveria')
+                                resposta.append('coloque dessa forma "editar [ID do evento] | [campo que você quer alterar] | [novo valor que você quer]"')
                     
                     elif resultado[0] == 'tutorial':
                         # Primeiro vai verivicar se a pessoa pediu só "tutorial"
@@ -259,14 +270,14 @@ try:
                             resposta.append("Aqui vai o tutorial de como me usar")
                             resposta.append("")
                             resposta.append("Como me usar?")
-                            resposta.append("   !agendar [data] | [materia] | [tipo] | [descrição(opcinal)]")
-                            resposta.append("   !editar [id] | [o campo que você que mudar] | [o valor que você quer]")
-                            resposta.append("   !status")
-                            resposta.append("   !hoje")
-                            resposta.append("   !amanha")
+                            resposta.append("   agendar [data] | [materia] | [tipo] | [descrição(opcinal)]")
+                            resposta.append("   editar [id] | [o campo que você que mudar] | [o valor que você quer]")
+                            resposta.append("   status")
+                            resposta.append("   hoje")
+                            resposta.append("   amanha")
                             resposta.append('―――――――――――――――――――――――')
                             resposta.append('Dica: ')
-                            resposta.append('   Você pode usar "*!tutorial [comando]*" para saber mais sobre um comando especiicado')
+                            resposta.append('   Você pode usar "*tutorial [comando]*" para saber mais sobre um comando especiicado')
                             resposta.append('―――――――――――――――――――――――')
                             resposta.append("obs: Não coloque as informações dentro de colchetes")
                         
@@ -274,11 +285,11 @@ try:
                             resposta.append("Não entendi o comando que você queria ajuda")
                             resposta.append("")
                             resposta.append("*Como me usar?*")
-                            resposta.append("   !agendar [data] | [materia] | [tipo] | [descrição(opcinal)]")
-                            resposta.append("   !editar [id] | [o campo que você que mudar] | [o valor que você quer]")
-                            resposta.append("   !status")
-                            resposta.append("   !hoje")
-                            resposta.append("   !amanha")
+                            resposta.append("   agendar [data] | [materia] | [tipo] | [descrição(opcinal)]")
+                            resposta.append("   editar [id] | [o campo que você que mudar] | [o valor que você quer]")
+                            resposta.append("   status")
+                            resposta.append("   hoje")
+                            resposta.append("   amanha")
                             resposta.append('―――――――――――――――――――――――')
                             resposta.append("obs: Não coloque as informações dentro de colchetes")
 
@@ -287,7 +298,7 @@ try:
                                 resposta.append("Com o comando *agendar*, você registra uma nova atividade no seu cronograma.")
                                 resposta.append("Para usar o comando *agendar* você precisa ser *ADMIN*")
                                 resposta.append("*Como usar?*")
-                                resposta.append("   !agendar [data] | [materia] | [tipo] | [descrição(opcinal)]")
+                                resposta.append("   agendar [data] | [materia] | [tipo] | [descrição(opcinal)]")
                                 resposta.append("―――――――――――――――――――――――")
                                 resposta.append("Dicas: ")
                                 resposta.append("   Na *data* escreva dessa forma *DD/MM/YY* ou *DD/MM/YYYY*")
@@ -299,21 +310,21 @@ try:
                             elif resultado[1] == 'status':
                                 resposta.append("Com o comando *status* você *tudo* o que está por vir")
                                 resposta.append("*Como usar?*")
-                                resposta.append("   !status")
+                                resposta.append("   status")
                                 resposta.append("―――――――――――――――――――――――")
                                 resposta.append("obs: Para usar você realmente só escreve \"!Status\"")
 
                             elif resultado[1] == 'hoje':
                                 resposta.append("Com o comando *hoje* você *tudo* que vai ter *hoje*")
                                 resposta.append("*Como usar?*")
-                                resposta.append("   !hoje")
+                                resposta.append("   hoje")
                                 resposta.append("―――――――――――――――――――――――")
                                 resposta.append("obs: Para usar você realmente só escreve \"!Hoje\"")
 
                             elif resultado[1] == 'amanha' or resultado[1] == 'amanhã':
                                 resposta.append("Com o comando *amanha* você *tudo* que vai ter *amanhã*")
                                 resposta.append("*Como usar?*")
-                                resposta.append("   !amanha")
+                                resposta.append("   amanha")
                                 resposta.append("―――――――――――――――――――――――")
                                 resposta.append("Dica: É aceito *!amanha* ou *!amanhã*")
                                 resposta.append("―――――――――――――――――――――――")
@@ -323,7 +334,7 @@ try:
                                 resposta.append("Com o comando *editar* você pode editar um evento que foi salvo")
                                 resposta.append("Para usar o comando *editar* você precisa ser *ADMIN*")
                                 resposta.append("*Como usar?*")
-                                resposta.append("   !editar [ID] | [campo] | [valor]")
+                                resposta.append("   editar [ID] | [campo] | [valor]")
                                 resposta.append("―――――――――――――――――――――――")
                                 resposta.append("Dica:")
                                 resposta.append("   Use o comando *\"!status\"* para saber o ID do evento")

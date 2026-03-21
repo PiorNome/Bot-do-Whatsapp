@@ -131,7 +131,7 @@ def adicionar_bd(texto:str) -> tuple[int]:
             print("Não encontrou a matéria")
             retorna[1] = 1
         
-        if not tipo in ('prova', 'trabalho', 'vazio', 'atividade', 'lição'):
+        if not tipo in ('prova', 'trabalho', 'vazio', 'atividade', 'lição', 'licao', 'liçao', 'licão'):
             print("Não encontrou um tipo valido")
             retorna[2] = 1
 
@@ -221,6 +221,9 @@ def editar_bd(texto:str):
         conexao.close()
         print('[Acabou função editar_bd]')
         return 'id_invalido'
+
+    if not campo_alvo in ('data_evento', 'data', 'evento_data','evento','materia','matéria','tipo','descrição', 'descriçao', 'descricão', 'descricao',):
+        return 'campo_invalido'
 
     if campo_alvo in ('data_evento', 'data', 'evento_data','evento',):
         formatos = ("%d/%m/%y", "%d/%m/%Y")
