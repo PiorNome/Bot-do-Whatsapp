@@ -159,7 +159,7 @@ def buscar_eventos(quando:str='') -> list[tuple]:
     try:
         if quando == '' or quando == 'status':
             data = date.today()
-            print(f"Pegou a viriavel data: {data}")
+            print(f"Pegou a variavel data: {data}")
             curso.execute(
                 '''SELECT * FROM eventos
                 WHERE data_evento >= ?
