@@ -19,6 +19,10 @@ def on_message(client, event: MessageEv):
     # remetente_jid já é o objeto que o WhatsApp precisa para responder
     remetente_jid = event.Info.MessageSource.Chat 
     numero = event.Info.MessageSource.Sender.User
+
+    if str(numero) == "173633364353118":
+        print('Mensagem do proprio bot')
+        return
     
     msg = event.Message
     texto = msg.conversation or (msg.extendedTextMessage and msg.extendedTextMessage.text) or ""
@@ -48,11 +52,22 @@ def on_message(client, event: MessageEv):
             print("comando agendar detectado")
 
             if "1" in resultado[1]:
-                print(f"Tem erros: {resultado[1]}")
-                for ind, mensagem in enumerate(RESPOSTAS_SISTEMA[resultado[0]]['erros']):
-                    if resultado[1][ind] == "1":
-                        resposta.append(RESPOSTAS_SISTEMA[resultado[0]]['erros'][ind])
-                        resposta.append(RESPOSTAS_SISTEMA[resultado[0]]['ajuda'][ind])
+                if resultado[1][0] == "1":
+                    resposta.append('O formato da *data* está *inválida*')
+                    resposta.append('Tente um desses formatos:')
+                    resposta.append('   *DD/MM/YY*')
+                    resposta.append('   ou')
+                    resposta.append('   *DD/MM/YYYY*')
+
+                if resultado[1][1] == "1":
+                    resposta.append('\n')
+                    resposta.append('*Matéria não encontrada*')
+                    resposta.append('Olhe no *suap* as matérias existentes')
+
+                if resultado[1][2] == "1":
+                    resposta.append('\n')
+                    resposta.append('Tipo do evento inválido')
+                    resposta.append('Só aceito prova, trabalho, atividade ou vazio')
 
             elif resultado[1] == 'falta_agrs':
                 resposta.append('Não foi possivel agendar o evento por falta argumentos')
@@ -70,15 +85,15 @@ def on_message(client, event: MessageEv):
         elif resultado[0] == 'Najudar':
             resposta.append('Não entendi o comando usado!')
             resposta.append('Aqui vão os comandos que temos, e como usa-los.')
-            resposta.append('   *Agendar*: estilo de entrada》 !agendar DD/MM/YY ou DD/MM/YYYY (data) | Matéria | Tipo (Prova, Trabalho, atividade ou Vazio) | descrição (opcinal)')
+            resposta.append('   *Agendar*: estilo de entrada》 agendar data | Matéria | Tipo (Prova, Trabalho, atividade ou Vazio) | descrição (opcinal)')
             resposta.append('   *Exemplo de mensagem*: ')
-            resposta.append('       !agendar 12/08/2008|Português|Prova|verbos,Redação,corigas')
+            resposta.append('       agendar 12/08/2008|Português|Prova|verbos,Redação,corigas')
             resposta.append('')
-            resposta.append('   *status*: !status (serve para ver todos os eventos que irão ter)')
+            resposta.append('   *status*: status (serve para ver todos os eventos que irão ter)')
             resposta.append('')
-            resposta.append('   *hoje*: !hoje (serve para ver todos os eventos que irão ter hoje)')
+            resposta.append('   *hoje*: hoje (serve para ver todos os eventos que irão ter hoje)')
             resposta.append('')
-            resposta.append('   *amanhã*: !amanhã (serve para ver todos os eventos de amanhã)')
+            resposta.append('   *amanhã*: amanhã (serve para ver todos os eventos de amanhã)')
             resposta.append('   *Exemplo da resposta dos 3 comandos acima*:')
             resposta.append('       🆔 [15] - Física')
             resposta.append('       📅 Data: 13/03/26')
@@ -107,7 +122,6 @@ def on_message(client, event: MessageEv):
         elif resultado[0] == 'editar':
             # Primeiro ele vê se deu sucesso, depois se deu errado
             if 'sucesso' in resultado[1]:
-                bot_funcoes.editar_bd
                 if resultado[1] == 'sucesso_data':
                     resposta.append('Sucesso ao editar a data🌟')
                 elif resultado[1] == 'sucesso_materia':
@@ -226,8 +240,8 @@ def on_message(client, event: MessageEv):
                 elif resultado[1] == 'tutorial':
                     resposta.append("Com o comando *tutorial* você pode ver como usar os outros comandos")
                     resposta.append("*Como usar?*")
-                    resposta.append("   !tutorial")
-                    resposta.append("   !tutorial [comando]")
+                    resposta.append("   tutorial")
+                    resposta.append("   tutorial [comando]")
                     resposta.append("―――――――――――――――――――――――")
                     resposta.append("Dica:")
                     resposta.append("   Se você usar só \"*!tutorial*\", você irar ver um tutorial basico de cada comando")
