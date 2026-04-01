@@ -5,12 +5,6 @@ from neonize.client import NewClient
 from neonize.events import MessageEv
 
 client = NewClient("teste.db")
-RESPOSTAS_SISTEMA = {
-    'agendar': {
-        'erros': ['Data invalida', 'Matéria invalida', 'Tipo invalido'],
-        'ajuda': ['Tente esse formato: DD/MM/YY ou DD/MM/YYYY', '', 'Tipos aceitos: Prova, Trabalho, atividade e Vazio']
-        }
-}
 
 # Usando o que o seu terminal encontrou: 'event'
 @client.event(MessageEv)
