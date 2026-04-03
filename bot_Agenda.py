@@ -1,6 +1,5 @@
 import os
 import bot_funcoes
-import neonize
 from neonize.client import NewClient
 from neonize.events import MessageEv
 
@@ -95,20 +94,26 @@ def on_message(client, event: MessageEv):
             resposta.append('       📚 O que estudar: Ondas')
             resposta.append('       ―――――――――――――――――――――――')
 
-        elif resultado[0] == 'status' or resultado[0] == 'hoje' or resultado[0] == 'amanha' or resultado[0] == 'amanhã':
+        elif resultado[0] == 'status' or resultado[0] == 'hoje' or resultado[0] == 'amanha' or resultado[0] == 'amanhã' or resultado[0] == 'semana':
             if resultado[1]: # Resultado[1] = (ID, Data, Matéria, Tipo, Descrição)
+
+                data_antiga = ''
                 for infos in resultado[1]:
                     parte_mensagem_enviara = []
                     print(f'Informação sendo colocado na resposta: {infos}')
+
                     data = infos[1]
-                    data_formatada = f'{data[-2:]}/{data[5:7]}/{data[:4]}'
-                    parte_mensagem_enviara.append(f'🆔[{infos[0]}]' + f' ― {infos[2]}')
-                    parte_mensagem_enviara.append(f'📅Data: {data_formatada}')
-                    parte_mensagem_enviara.append(f'✍️Tipo: {infos[3]}')
+                    if data_antiga != data:
+                        data_antiga = data
+                        data_formatada = f'{data[-2:]}/{data[5:7]}'
+                        parte_mensagem_enviara.append(f'### *{data_formatada}*')
+
+                    parte_mensagem_enviara.append(f'- {infos[3]} - {infos[2]} 🤔🔭')
+
                     resposta.extend(parte_mensagem_enviara)
                     if infos[4] != 'Vazio':
-                        resposta.append(f'📚O que estudar: {infos[4]}')
-                    resposta.append('―――――――――――――――――――――――')
+                        resposta.append(f'> {infos[4]}')
+                    resposta.append('')
 
             else:
                 resposta.append("Não a nenhum evento programado")

@@ -1,11 +1,11 @@
 import os, sqlite3, json
-from datetime import datetime, date, timedelta
+from datetime import *
 from dotenv import load_dotenv
 load_dotenv()
 def decidir_destino(texto:str, numero_celular:str) -> tuple[str, any]:
     print(f"[Função: decidir_destino]")
     print(f"Recebeu {texto}")
-    comandos = ['agendar', 'status', 'hoje', 'amanha', 'amanhã', 'tutorial', 'editar']
+    comandos = ['agendar', 'status', 'hoje', 'amanha', 'amanhã', 'tutorial', 'editar', 'semana']
     lista_strs = texto.split()
     numeros = os.getenv('ADMINS')
     ADMINS = numeros.split(' , ')
@@ -76,7 +76,35 @@ def decidir_destino(texto:str, numero_celular:str) -> tuple[str, any]:
             
             print("[Acabou a função decidir_destino]")
             return (comando, None,)
-    
+        
+        elif lista_strs[0] == 'semana':
+            # uma colinha para eu saber o indice
+            "Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado", "Domingo"
+            #       0              1               2               3              4            5         6
+
+            print('Comando Semana detectado')
+            comando = 'semana'
+            hoje = datetime.now()
+            hoje_formatado = hoje.strftime("%Y-%m-%d")
+            dia_semana = hoje.weekday()
+
+            # Alvo é Sexta (4). Cálculo: (Alvo - Hoje) % 7
+            dias_faltando = (4 - dia_semana) % 7
+
+            print(f'Falta {dias_faltando} para a Sexta-Feira')
+
+            # Se hoje for sexta e você quiser a da SEMANA QUE VEM, force 7 dias:
+            if dias_faltando == 0: 
+                dias_faltando = 7
+
+            sexta = hoje + timedelta(days=dias_faltando)
+            sexta_formatada = sexta.strftime("%Y-%m-%d")
+
+            eventos_pegos = buscar_evento_semana(hoje_formatado, sexta_formatada)
+
+            print('[Acabou a função decidir_destino]')
+            return (comando, eventos_pegos)
+
     print("[Acabou a função decidir_destino]")
     return ('Najudar', None)
 
@@ -149,6 +177,28 @@ def adicionar_bd(texto:str) -> tuple[int]:
     print("Por falta de argumentos, será retornado (-1)")
     print("[Acabou a função adicionar_bd]")
     return [-1]
+
+def buscar_evento_semana(hoje, sexta):
+    print("[Função buscar_evento_semana]")
+    conexao = sqlite3.connect('cronograma.db')
+    print('Conexão feita')
+
+    curso = conexao.cursor()
+    curso.execute(
+        """
+            SELECT * FROM eventos
+            WHERE data_evento BETWEEN ? AND ?
+            ORDER BY data_evento ASC, materia ASC;
+        """, (hoje, sexta,)
+    )
+    print('Comando dado')
+
+    resultados = curso.fetchall()
+    print('Resultados pegos')
+
+    conexao.close()
+    print("[Acabou a função buscar_evento_semana]")
+    return resultados
 
 def buscar_eventos(quando:str='') -> list[tuple]:
     print('[Função buscar_eventos]')
