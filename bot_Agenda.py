@@ -1,13 +1,22 @@
-import os
+import os, time
 import bot_funcoes
 from neonize.client import NewClient
 from neonize.events import MessageEv
+
+hora_inicio = time.time()
 
 client = NewClient("teste.db")
 
 # Usando o que o seu terminal encontrou: 'event'
 @client.event(MessageEv)
 def on_message(client, event: MessageEv):
+
+    hora_mensagem = event.Info.Timestamp / 1000
+    print(f"hora inicio: {hora_inicio}")
+    print(f"hora mensagem: {hora_mensagem}")
+    if hora_mensagem < hora_inicio:
+        return
+
     resposta = []
     # remetente_jid já é o objeto que o WhatsApp precisa para responder
     remetente_jid = event.Info.MessageSource.Chat 
@@ -38,7 +47,7 @@ def on_message(client, event: MessageEv):
     try:
         print(f'Pessoa mandou: {texto}')
         
-        resultado = bot_funcoes.decidir_destino(texto.lower(), numero)
+        resultado:list[str, any] = bot_funcoes.decidir_destino(texto.lower(), numero)
         print(f"Função decidir_destino retornou: {resultado}")
 
         if resultado[0] == 'agendar':
@@ -112,7 +121,8 @@ def on_message(client, event: MessageEv):
 
                     resposta.extend(parte_mensagem_enviara)
                     if infos[4] != 'Vazio':
-                        resposta.append(f'> {infos[4]}')
+                        descricao = infos[4].replace('\n', '\n> ')
+                        resposta.append(f'> {descricao}')
                     resposta.append('')
 
             else:
