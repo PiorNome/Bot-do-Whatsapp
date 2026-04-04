@@ -7,8 +7,8 @@ def decidir_destino(texto:str, numero_celular:str) -> tuple[str, any]:
     print(f"Recebeu {texto}")
     comandos = ['agendar', 'status', 'hoje', 'amanha', 'amanhã', 'tutorial', 'editar', 'semana']
     lista_strs = texto.split()
-    numeros = os.getenv('ADMINS')
-    ADMINS = numeros.split(' , ')
+    numeros = os.getenv('REPRESENTATES')
+    REPRESENTATES = numeros.split(' , ')
     print(f"Mensagem separada como: {lista_strs}")
 
     print(f"Comando da mensagem é: {lista_strs[0]}")
@@ -19,7 +19,7 @@ def decidir_destino(texto:str, numero_celular:str) -> tuple[str, any]:
 
             print(f"Entrou como comando agendar")
             retorna = ''
-            if not numero_celular in ADMINS:
+            if not numero_celular in REPRESENTATES:
                 print(f"O número {numero_celular} não é ADMIN")
                 return (comando, 'sem_permissão')
             print(f"O número {numero_celular} é ADMIN")
@@ -48,7 +48,7 @@ def decidir_destino(texto:str, numero_celular:str) -> tuple[str, any]:
             print('Comando "editar" detectado')
             comando = 'editar'
 
-            if not numero_celular in ADMINS:
+            if not numero_celular in REPRESENTATES:
                 print(f"O número {numero_celular} não é ADMIN")
                 return (comando, 'sem_permissão')
             print('Esse numero é admin')
@@ -119,7 +119,7 @@ def adicionar_bd(texto:str) -> tuple[int]:
     
     texto = texto[7:]
 
-    informacoes = texto.split("|")
+    informacoes = texto.split(",")
     print(f"Separou as informações")
     qntd = len(informacoes) # A quantidade de partes que tem
     if qntd >= 3:
@@ -130,12 +130,12 @@ def adicionar_bd(texto:str) -> tuple[int]:
         descricao = 'Vazio'
         if qntd > 3:
             descricao = ''
-            descricao = "|".join(informacoes[3:]).strip()
+            descricao = ",".join(informacoes[3:]).strip()
             print(f"Adicionou a descrição: {descricao}")
     
         # O bot vai verivicar se a data está certá
         # O bot tenta aceitar tanto 25/04/26 quanto 25/04/2026
-        formatos = ("%d/%m/%y", "%d/%m/%Y")
+        formatos = ("%d/%m/%y", "%d/%m/%Y", "%d/%m")
     
         try:
             data_objeto = datetime.strptime(data, formatos[0])
@@ -145,8 +145,13 @@ def adicionar_bd(texto:str) -> tuple[int]:
                 data_objeto = datetime.strptime(data, formatos[1])
                 print("Data valida")
             except:
-                print("Data invalida")
-                retorna[0] = 1
+                try:
+                    data_objeto = datetime.strptime(data, formatos[2])
+                    data_objeto.replace(year=2026)
+                    print("Data valida")
+                except:
+                    print("Data invalida")
+                    retorna[0] = 1
         
         encontrou_materia = False
         for materia_key in MATERIAS.keys():
@@ -242,7 +247,7 @@ def buscar_eventos(quando:str='') -> list[tuple]:
 
 def editar_bd(texto:str):
     print("[Função editar_bd]")
-    infos = texto[6:].split('|')
+    infos = texto[6:].split(',')
     print(f'texto separado: {infos}')
 
     if len(infos) > 3:

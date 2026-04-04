@@ -1,11 +1,17 @@
-import os, time
+import os, time, json
 import bot_funcoes
 from neonize.client import NewClient
 from neonize.events import MessageEv
+from dotenv import load_dotenv
+load_dotenv()
+representates = os.getenv('REPRESENTATES')
 
 hora_inicio = time.time()
 
 client = NewClient("teste.db")
+
+with open('emojis_materias.json', 'r', encoding='utf-8') as f:
+    materia_emojis = json.load(f)
 
 # Usando o que o seu terminal encontrou: 'event'
 @client.event(MessageEv)
@@ -28,21 +34,6 @@ def on_message(client, event: MessageEv):
     
     msg = event.Message
     texto = msg.conversation or (msg.extendedTextMessage and msg.extendedTextMessage.text) or ""
-    
-    if texto:
-        print(f"Número: {numero} | Mensagem: {texto}")
-        
-        if texto.lower() == "!teste":
-            # Usando o objeto JID correto em vez de apenas a string
-            client.send_message(remetente_jid, "Opa! Recebi seu teste.")
-        
-        if texto.lower() == "!desligar":
-            try:
-                client.send_message(remetente_jid, "Desligando...")
-                # Forçando a saída do Python para garantir que o processo morra
-                os._exit(0) 
-            except:
-                os._exit(0)
     
     try:
         print(f'Pessoa mandou: {texto}')
@@ -72,11 +63,12 @@ def on_message(client, event: MessageEv):
                     resposta.append('Só aceito prova, trabalho, atividade ou vazio')
 
             elif resultado[1] == 'falta_agrs':
-                resposta.append('Não foi possivel agendar o evento por falta argumentos')
+                resposta.append('Não foi possivel agendar o evento por falta de informações')
                 resposta.append('*Como Usar o comando*:')
-                resposta.append('   *Agendar*: estilo de entrada 》 agendar DD/MM/YY ou DD/MM/YYYY (data) | Matéria | Tipo (Prova, Trabalho, atividade ou Vazio) | descrição (opcinal)')
-                resposta.append('   *Exemplo de mensagem*: ')
-                resposta.append('       agendar 31/12/1999|Português|Prova|verbos, Redação, corigas')
+                resposta.append("   agendar [data] , [materia] , [tipo] , [descrição(opcinal)]")
+                resposta.append('―――――――――――――――――――――――')
+                resposta.append("Dica:")
+                resposta.append("   Use \"tutorial agendar\" para obter mais informações")
 
             elif resultado[1] == 'sem_permissão':
                 resposta.append('Você não tem permissão para usar esse comando')
@@ -87,21 +79,23 @@ def on_message(client, event: MessageEv):
         elif resultado[0] == 'Najudar':
             resposta.append('Não entendi o comando usado!')
             resposta.append('Aqui vão os comandos que temos, e como usa-los.')
-            resposta.append('   *Agendar*: estilo de entrada》 agendar data | Matéria | Tipo (Prova, Trabalho, atividade ou Vazio) | descrição (opcinal)')
-            resposta.append('   *Exemplo de mensagem*: ')
-            resposta.append('       agendar 12/08/2008|Português|Prova|verbos,Redação,corigas')
-            resposta.append('')
-            resposta.append('   *status*: status (serve para ver todos os eventos que irão ter)')
-            resposta.append('')
-            resposta.append('   *hoje*: hoje (serve para ver todos os eventos que irão ter hoje)')
-            resposta.append('')
-            resposta.append('   *amanhã*: amanhã (serve para ver todos os eventos de amanhã)')
-            resposta.append('   *Exemplo da resposta dos 3 comandos acima*:')
-            resposta.append('       🆔 [15] - Física')
-            resposta.append('       📅 Data: 13/03/26')
-            resposta.append('       ✍️ Tipo: Prova')
-            resposta.append('       📚 O que estudar: Ondas')
-            resposta.append('       ―――――――――――――――――――――――')
+            resposta.append("")
+
+            if numero in representates:
+                resposta.append("   agendar [data] , [materia] , [tipo] , [descrição(opcinal)]")
+                resposta.append("   editar [id] , [o campo que você que mudar] , [o valor que você quer]")
+
+            resposta.append("   status")
+            resposta.append("   hoje")
+            resposta.append("   amanha")
+            resposta.append("   semana")
+            resposta.append("   tutorial")
+            resposta.append('―――――――――――――――――――――――')
+            resposta.append("obs: Não coloque as informações dentro de colchetes")
+            resposta.append('―――――――――――――――――――――――')
+            resposta.append("Dica:")
+            resposta.append("   Se você usar \"tutorial [comando]\", você irar ver um tutorial mais completo do comando especificado")
+
 
         elif resultado[0] == 'status' or resultado[0] == 'hoje' or resultado[0] == 'amanha' or resultado[0] == 'amanhã' or resultado[0] == 'semana':
             if resultado[1]: # Resultado[1] = (ID, Data, Matéria, Tipo, Descrição)
@@ -117,7 +111,7 @@ def on_message(client, event: MessageEv):
                         data_formatada = f'{data[-2:]}/{data[5:7]}'
                         parte_mensagem_enviara.append(f'### *{data_formatada}*')
 
-                    parte_mensagem_enviara.append(f'- {infos[3]} - {infos[2]} 🤔🔭')
+                    parte_mensagem_enviara.append(f'- {infos[3]} - {infos[2]} {materia_emojis[infos[2]]}')
 
                     resposta.extend(parte_mensagem_enviara)
                     if infos[4] != 'Vazio':
@@ -160,10 +154,10 @@ def on_message(client, event: MessageEv):
             else: # Aqui vai ficar os casos de muitos argumentou e os poucos argumentos
                 if resultado[1] == 'muitos_agrs':
                     resposta.append('❌Você colocou mais informações do que deveria')
-                    resposta.append('coloque dessa forma "editar [ID do evento] | [campo que você quer alterar] | [novo valor que você quer]"')
+                    resposta.append('coloque dessa forma "editar [ID do evento] , [campo que você quer alterar] , [novo valor que você quer]"')
                 elif resultado[1] == 'falta_agrs':
                     resposta.append('❌Você colocou menos informações que deveria')
-                    resposta.append('coloque dessa forma "editar [ID do evento] | [campo que você quer alterar] | [novo valor que você quer]"')
+                    resposta.append('coloque dessa forma "editar [ID do evento] , [campo que você quer alterar] , [novo valor que você quer]"')
         
         elif resultado[0] == 'tutorial':
             # Primeiro vai verivicar se a pessoa pediu só "tutorial"
@@ -173,14 +167,19 @@ def on_message(client, event: MessageEv):
                 resposta.append("Aqui vai o tutorial de como me usar")
                 resposta.append("")
                 resposta.append("Como me usar?")
-                resposta.append("   agendar [data] | [materia] | [tipo] | [descrição(opcinal)]")
-                resposta.append("   editar [id] | [o campo que você que mudar] | [o valor que você quer]")
+
+                if numero in representates:
+                    resposta.append("   agendar [data] , [materia] , [tipo] , [descrição(opcinal)]")
+                    resposta.append("   editar [id] , [o campo que você que mudar] , [o valor que você quer]")
+
+                resposta.append("   tutorial")
                 resposta.append("   status")
                 resposta.append("   hoje")
                 resposta.append("   amanha")
+                resposta.append("   semana")
                 resposta.append('―――――――――――――――――――――――')
                 resposta.append('Dica: ')
-                resposta.append('   Você pode usar "*tutorial [comando]*" para saber mais sobre um comando especiicado')
+                resposta.append('   Você pode usar "*tutorial [comando]*" para saber mais sobre um comando especificado')
                 resposta.append('―――――――――――――――――――――――')
                 resposta.append("obs: Não coloque as informações dentro de colchetes")
             
@@ -188,61 +187,77 @@ def on_message(client, event: MessageEv):
                 resposta.append("Não entendi o comando que você queria ajuda")
                 resposta.append("")
                 resposta.append("*Como me usar?*")
-                resposta.append("   agendar [data] | [materia] | [tipo] | [descrição(opcinal)]")
-                resposta.append("   editar [id] | [o campo que você que mudar] | [o valor que você quer]")
+
+                if numero in representates:
+                    resposta.append("   agendar [data] , [materia] , [tipo] , [descrição(opcinal)]")
+                    resposta.append("   editar [id] , [o campo que você que mudar] , [o valor que você quer]")
+
+                resposta.append("   tutorial")
                 resposta.append("   status")
                 resposta.append("   hoje")
                 resposta.append("   amanha")
+                resposta.append("   semana")
                 resposta.append('―――――――――――――――――――――――')
                 resposta.append("obs: Não coloque as informações dentro de colchetes")
+                resposta.append('―――――――――――――――――――――――')
+                resposta.append("Dica:")
+                resposta.append("   Se você usar \"tutorial [comando]\", você irar ver um tutorial mais completo do comando especificado")
 
-            elif resultado[1] in ('agendar', 'status', 'hoje', 'amanha', 'amanhã', 'editar', 'tutorial',):
+            elif resultado[1] in ('agendar', 'status', 'hoje', 'amanha', 'amanhã', 'semana', 'editar', 'tutorial',):
                 if resultado[1] == 'agendar':
-                    resposta.append("Com o comando *agendar*, você registra uma nova atividade no seu cronograma.")
+                    resposta.append("Com o comando *agendar*, você registra uma nova atividade no cronograma.")
                     resposta.append("Para usar o comando *agendar* você precisa ser *ADMIN*")
                     resposta.append("*Como usar?*")
-                    resposta.append("   agendar [data] | [materia] | [tipo] | [descrição(opcinal)]")
+                    resposta.append("   agendar [data] , [materia] , [tipo] , [descrição(opcinal)]")
                     resposta.append("―――――――――――――――――――――――")
                     resposta.append("Dicas: ")
-                    resposta.append("   Na *data* escreva dessa forma *DD/MM/YY* ou *DD/MM/YYYY*")
+                    resposta.append("   Na *data* escreva dessa forma *DD/MM*, *DD/MM/YY* ou *DD/MM/YYYY*")
                     resposta.append("   Na *matéria*, é aceito alguns erros de escrita, como faltar um acento em algumas letras")
                     resposta.append("   Ainda na matéria, você pode escrever as abreviações que estão no suap")
                     resposta.append("   No *tipo* só será aceito algum desses *Prova, trabalho, atividade ou Vazio*")
                     resposta.append('   Na *descrição*, você pode escrever o que quiser ou simplesmente deixar em branco.')
 
                 elif resultado[1] == 'status':
-                    resposta.append("Com o comando *status* você *tudo* o que está por vir")
+                    resposta.append("Com o comando *status* você vê *tudo* o que está por vir")
                     resposta.append("*Como usar?*")
                     resposta.append("   status")
                     resposta.append("―――――――――――――――――――――――")
-                    resposta.append("obs: Para usar você realmente só escreve \"!Status\"")
+                    resposta.append("obs: Para usar você realmente só escreve \"Status\"")
 
                 elif resultado[1] == 'hoje':
-                    resposta.append("Com o comando *hoje* você *tudo* que vai ter *hoje*")
+                    resposta.append("Com o comando *hoje* você vê *tudo* que vai ter *hoje*")
                     resposta.append("*Como usar?*")
                     resposta.append("   hoje")
                     resposta.append("―――――――――――――――――――――――")
-                    resposta.append("obs: Para usar você realmente só escreve \"!Hoje\"")
+                    resposta.append("obs: Para usar você realmente só escreve \"Hoje\"")
 
                 elif resultado[1] == 'amanha' or resultado[1] == 'amanhã':
-                    resposta.append("Com o comando *amanha* você *tudo* que vai ter *amanhã*")
+                    resposta.append("Com o comando *amanha* você vê *tudo* que vai ter *amanhã*")
                     resposta.append("*Como usar?*")
                     resposta.append("   amanha")
                     resposta.append("―――――――――――――――――――――――")
-                    resposta.append("Dica: É aceito *!amanha* ou *!amanhã*")
+                    resposta.append("Dica: É aceito *amanha* ou *amanhã*")
                     resposta.append("―――――――――――――――――――――――")
-                    resposta.append("obs: Para usar você realmente só escreve \"!Amanha\"")
+                    resposta.append("obs: Para usar você realmente só escreve \"Amanhã\"")
+
+                elif resultado[1] == 'semana':
+                    resposta.append("Com o comando *semana* você vê *tudo* que vai nessa *semana*")
+                    resposta.append("*Como usar?*")
+                    resposta.append("   semana")
+                    resposta.append("―――――――――――――――――――――――")
+                    resposta.append("obs: Para usar você realmente só escreve \"Semana\"")
 
                 elif resultado[1] == 'editar':
                     resposta.append("Com o comando *editar* você pode editar um evento que foi salvo")
                     resposta.append("Para usar o comando *editar* você precisa ser *ADMIN*")
+                    resposta.append("")
                     resposta.append("*Como usar?*")
-                    resposta.append("   editar [ID] | [campo] | [valor]")
+                    resposta.append("   editar [ID] , [campo] , [valor]")
                     resposta.append("―――――――――――――――――――――――")
                     resposta.append("Dica:")
-                    resposta.append("   Use o comando *\"!status\"* para saber o ID do evento")
+                    resposta.append("   Use o comando *\"listar\"* para saber o ID do evento")
                     resposta.append("   No *campo*, você escreve o que você quer mudar, pode-ser data, matéria, tipo ou descrição")
-                    resposta.append("> Use o comando \"!tutorial agendar\" para saber os tipos validos")
+                    resposta.append("> Use o comando \"tutorial agendar\" para saber os tipos validos")
                     resposta.append("   No *valor*, você escreve a nova informação que deve entrar no lugar.")
 
 
@@ -253,9 +268,9 @@ def on_message(client, event: MessageEv):
                     resposta.append("   tutorial [comando]")
                     resposta.append("―――――――――――――――――――――――")
                     resposta.append("Dica:")
-                    resposta.append("   Se você usar só \"*!tutorial*\", você irar ver um tutorial basico de cada comando")
+                    resposta.append("   Se você usar só \"*tutorial*\", você irar ver um tutorial basico de cada comando")
                     resposta.append("   Se você usar \"tutorial [comando]\", você irar ver um tutorial mais completo do comando especificado")
-                    resposta.append("> Use \"*!tutorial*\" para ver os comandos existentes")
+                    resposta.append("> Use \"*tutorial*\" para ver os comandos existentes")
 
         resposta_final = '\n'.join(resposta)
 
