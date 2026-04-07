@@ -5,7 +5,7 @@ load_dotenv()
 def decidir_destino(texto:str, numero_celular:str) -> tuple[str, any]:
     print(f"[Função: decidir_destino]")
     print(f"Recebeu {texto}")
-    comandos = ['agendar', 'status', 'hoje', 'amanha', 'amanhã', 'tutorial', 'editar', 'semana']
+    comandos = ['agendar', 'status', 'hoje', 'amanha', 'amanhã', 'tutorial', 'editar', 'semana', 'listar']
     lista_strs = texto.split()
     numeros = os.getenv('REPRESENTATES')
     REPRESENTATES = numeros.split(' , ')
@@ -35,7 +35,7 @@ def decidir_destino(texto:str, numero_celular:str) -> tuple[str, any]:
             print("[Acabou a função decidir_destino]")
             return (comando,retorna)
         
-        elif lista_strs[0] == 'status' or lista_strs[0] == 'hoje' or lista_strs[0] == 'amanha' or lista_strs[0] == 'amanhã':
+        elif lista_strs[0] == 'status' or lista_strs[0] == 'hoje' or lista_strs[0] == 'amanha' or lista_strs[0] == 'amanhã' or lista_strs[0] == 'listar':
             comando = lista_strs[0]
             print(f"O comando usado para ver os eventos foi: \"{comando}\"")
             print("Buscando eventos")
@@ -212,7 +212,7 @@ def buscar_eventos(quando:str='') -> list[tuple]:
     curso = conexao.cursor()
     
     try:
-        if quando == '' or quando == 'status':
+        if quando == '' or quando == 'status' or quando == 'listar':
             data = date.today()
             print(f"Pegou a variavel data: {data}")
             curso.execute(
