@@ -15,12 +15,22 @@ with open('emojis_materias.json', 'r', encoding='utf-8') as f:
 
 # Usando o que o seu terminal encontrou: 'event'
 @client.event(MessageEv)
-def on_message(client, event: MessageEv):
+def on_message(client: NewClient, event: MessageEv):
 
     hora_mensagem = event.Info.Timestamp / 1000
     print(f"hora inicio: {hora_inicio}")
     print(f"hora mensagem: {hora_mensagem}")
     if hora_mensagem < hora_inicio:
+        return
+
+    # 2. Proteção contra mensagens vazias ou de sistema
+    # Verifica se a mensagem realmente tem uma conversa de texto
+    texto = event.Message.conversation or event.Message.extendedTextMessage.text or ""
+    if not texto:
+        return 
+
+    # 3. Proteção contra o Status (Ignora mensagens que vem do Status)
+    if event.Info.MessageSource.Chat == "status@broadcast":
         return
 
     resposta = []
