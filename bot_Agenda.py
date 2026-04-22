@@ -1,7 +1,7 @@
-import os, time, json
+import os, time, json, threading
 import bot_funcoes
 from neonize.client import NewClient
-from neonize.events import MessageEv
+from neonize.events import MessageEv, ConnectedEv
 from dotenv import load_dotenv
 load_dotenv()
 representates = os.getenv('REPRESENTATES')
@@ -9,6 +9,10 @@ representates = os.getenv('REPRESENTATES')
 hora_inicio = time.time()
 
 client = NewClient("teste.db")
+
+@client.event(ConnectedEv)
+def on_connected(client: NewClient, event: ConnectedEv):
+    threading.Thread(target=bot_funcoes.tarefa, args=client, daemon=True).start()
 
 with open('emojis_materias.json', 'r', encoding='utf-8') as f:
     materia_emojis = json.load(f)
