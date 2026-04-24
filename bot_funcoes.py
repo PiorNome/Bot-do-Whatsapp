@@ -126,8 +126,8 @@ def adicionar_bd(texto:str) -> tuple[int]:
     qntd = len(informacoes) # A quantidade de partes que tem
     if qntd >= 3:
         data = informacoes[0].strip()
-        materia = informacoes[1].strip()
-        tipo = informacoes[2].strip()
+        tipo = informacoes[1].strip()
+        materia = informacoes[2].strip()
 
         descricao = 'Vazio'
         if qntd > 3:
@@ -166,9 +166,6 @@ def adicionar_bd(texto:str) -> tuple[int]:
             print("Não encontrou a matéria")
             retorna[1] = 1
         
-        if not tipo in ('prova', 'trabalho', 'vazio', 'atividade', 'lição', 'licao', 'liçao', 'licão'):
-            print("Não encontrou um tipo valido")
-            retorna[2] = 1
 
         if not 1 in retorna:
             print("Salvando no Banco de Dados")
@@ -283,7 +280,7 @@ def editar_bd(texto:str):
         return 'campo_invalido'
 
     if campo_alvo in ('data_evento', 'data', 'evento_data','evento',):
-        formatos = ("%d/%m/%y", "%d/%m/%Y")
+        formatos = ("%d/%m/%y", "%d/%m/%Y", "%d/%m")
     
         try:
             data_objeto = datetime.strptime(novo_valor, formatos[0])
@@ -293,9 +290,14 @@ def editar_bd(texto:str):
                 data_objeto = datetime.strptime(novo_valor, formatos[1])
                 print("Data valida")
             except:
-                print("Data invalida")
-                print('[Acabou função editar_bd]')
-                return 'data_invalido'
+                try:
+                    data_objeto = datetime.strptime(novo_valor, formatos[2])
+                    data_objeto.replace(year=2026)
+                    print("Data valida")
+                except:
+                    print("Data invalida")
+                    print('[Acabou função editar_bd]')
+                    return 'data_invalido'
         
         curso.execute(
             '''UPDATE eventos SET data_evento = ?
@@ -334,11 +336,6 @@ def editar_bd(texto:str):
         return 'sucesso_materia'
     
     if campo_alvo in ('tipo',):
-        if not novo_valor in ('prova', 'trabalho', 'atividade', 'vazio'):
-            print('Não foi encontrado o tipo')
-            print('[Acabou função editar_bd]')
-            return 'tipo_invalido'
-        
         curso.execute(
             '''UPDATE eventos SET tipo = ?
             WHERE id = ?''', (novo_valor.title(), id_evento,))

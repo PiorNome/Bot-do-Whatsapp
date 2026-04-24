@@ -79,7 +79,7 @@ def on_message(client: NewClient, event: MessageEv):
             elif resultado[1] == 'falta_agrs':
                 resposta.append('Não foi possivel agendar o evento por falta de informações')
                 resposta.append('*Como Usar o comando*:')
-                resposta.append("   agendar [data] , [materia] , [tipo] , [descrição(opcinal)]")
+                resposta.append("   agendar [data] , [tipo] , [materia] , [descrição(opcinal)]")
                 resposta.append('―――――――――――――――――――――――')
                 resposta.append("Dica:")
                 resposta.append("   Use \"tutorial agendar\" para obter mais informações")
@@ -96,7 +96,7 @@ def on_message(client: NewClient, event: MessageEv):
             resposta.append("")
 
             if numero in representates:
-                resposta.append("   agendar [data] , [materia] , [tipo] , [descrição(opcinal)]")
+                resposta.append("   agendar [data] , [tipo] , [materia] , [descrição(opcinal)]")
                 resposta.append("   editar [id] , [o campo que você que mudar] , [o valor que você quer]")
                 resposta.append("   listar")
 
@@ -187,7 +187,7 @@ def on_message(client: NewClient, event: MessageEv):
                 resposta.append("Como me usar?")
 
                 if numero in representates:
-                    resposta.append("   agendar [data] , [materia] , [tipo] , [descrição(opcinal)]")
+                    resposta.append("   agendar [data] , [tipo] , [materia] , [descrição(opcinal)]")
                     resposta.append("   editar [id] , [o campo que você que mudar] , [o valor que você quer]")
                     resposta.append("   listar")
                 
@@ -208,7 +208,7 @@ def on_message(client: NewClient, event: MessageEv):
                 resposta.append("*Como me usar?*")
 
                 if numero in representates:
-                    resposta.append("   agendar [data] , [materia] , [tipo] , [descrição(opcinal)]")
+                    resposta.append("   agendar [data] , [tipo] , [materia] , [descrição(opcinal)]")
                     resposta.append("   editar [id] , [o campo que você que mudar] , [o valor que você quer]")
                     resposta.append("   listar")
 
@@ -228,7 +228,7 @@ def on_message(client: NewClient, event: MessageEv):
                     resposta.append("Com o comando *agendar*, você registra uma nova atividade no cronograma.")
                     resposta.append("Para usar o comando *agendar* você precisa ser *ADMIN*")
                     resposta.append("*Como usar?*")
-                    resposta.append("   agendar [data] , [materia] , [tipo] , [descrição(opcinal)]")
+                    resposta.append("   agendar [data] , [tipo] , [materia] , [descrição(opcinal)]")
                     resposta.append("―――――――――――――――――――――――")
                     resposta.append("Dicas: ")
                     resposta.append("   Na *data* escreva dessa forma *DD/MM*, *DD/MM/YY* ou *DD/MM/YYYY*")
