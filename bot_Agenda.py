@@ -10,10 +10,16 @@ hora_inicio = time.time()
 
 client = NewClient("teste.db")
 
+thread_cronograma = None
+
 @client.event(ConnectedEv)
 def on_connected(client: NewClient, event: ConnectedEv):
-    threading.Thread(target=bot_funcoes.tarefa, args=(client,), daemon=True).start()
-    pass
+    global thread_cronograma
+    # Só inicia a thread se ela ainda não existir
+    if thread_cronograma is None or not thread_cronograma.is_alive():
+        thread_cronograma = threading.Thread(target=bot_funcoes.tarefa, args=(client,), daemon=True)
+        thread_cronograma.start()
+        print("🚀 Thread de tarefas iniciada!")
 
 with open('emojis_materias.json', 'r', encoding='utf-8') as f:
     materia_emojis = json.load(f)

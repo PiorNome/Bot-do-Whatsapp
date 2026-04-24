@@ -1,4 +1,5 @@
 import os, sqlite3, json
+from time import sleep
 from datetime import *
 from neonize.client import NewClient
 from neonize.utils import build_jid
@@ -361,57 +362,59 @@ def editar_bd(texto:str):
     print('\033[31mRESOLVA\033[0m')
 
 def tarefa(client: NewClient):
-    agora = datetime.now()
-    dia_da_semana = agora.weekday()  # Segunda=0, Sexta=4
-    hora_atual = agora.strftime("%H:%M")
-    if dia_da_semana == 4 and hora_atual == "17:01":
-        amigo = build_jid(os.getenv("AMIGO"))
-        with open('emojis_materias.json', 'r', encoding='utf-8') as f:
-            materia_emojis = json.load(f)
+    while True:
+        agora = datetime.now()
+        dia_da_semana = agora.weekday()  # Segunda=0, Sexta=4
+        hora_atual = agora.strftime("%H:%M")
+        if dia_da_semana == 4 and hora_atual == "17:20":
+            amigo = build_jid(os.getenv("AMIGO"))
+            with open('emojis_materias.json', 'r', encoding='utf-8') as f:
+                materia_emojis = json.load(f)
 
-        hoje = datetime.now()
-        hoje_formatado = hoje.strftime("%Y-%m-%d")
-        dia_semana = hoje.weekday()
+            hoje = datetime.now()
+            hoje_formatado = hoje.strftime("%Y-%m-%d")
+            dia_semana = hoje.weekday()
 
-        # Alvo é Sexta (4). Cálculo: (Alvo - Hoje) % 7
-        dias_faltando = (4 - dia_semana) % 7
+            # Alvo é Sexta (4). Cálculo: (Alvo - Hoje) % 7
+            dias_faltando = (4 - dia_semana) % 7
 
-        print(f'Falta {dias_faltando} para a Sexta-Feira')
+            print(f'Falta {dias_faltando} para a Sexta-Feira')
 
-        # Se hoje for sexta e você quiser a da SEMANA QUE VEM, force 7 dias:
-        if dias_faltando == 0: 
-            dias_faltando = 7
+            # Se hoje for sexta e você quiser a da SEMANA QUE VEM, force 7 dias:
+            if dias_faltando == 0: 
+                dias_faltando = 7
 
-        sexta = hoje + timedelta(days=dias_faltando)
-        sexta_formatada = sexta.strftime("%Y-%m-%d")
+            sexta = hoje + timedelta(days=dias_faltando)
+            sexta_formatada = sexta.strftime("%Y-%m-%d")
 
-        eventos_pegos = buscar_evento_semana(hoje_formatado, sexta_formatada)
+            eventos_pegos = buscar_evento_semana(hoje_formatado, sexta_formatada)
 
-        mensagem = []
-        if len(eventos_pegos) > 0: # eventos_pegos = (ID, Data, Matéria, Tipo, Descrição)
+            mensagem = []
+            if len(eventos_pegos) > 0: # eventos_pegos = (ID, Data, Matéria, Tipo, Descrição)
 
-            data_antiga = ''
-            for infos in eventos_pegos:
-                parte_mensagem_enviara = []
-                print(f'Informação sendo colocado na resposta: {infos}')
+                data_antiga = ''
+                for infos in eventos_pegos:
+                    parte_mensagem_enviara = []
+                    print(f'Informação sendo colocado na resposta: {infos}')
 
-                data = infos[1]
-                if data_antiga != data:
-                    data_antiga = data
-                    data_formatada = f'{data[-2:]}/{data[5:7]}'
-                    parte_mensagem_enviara.append(f'### *{data_formatada}*')
+                    data = infos[1]
+                    if data_antiga != data:
+                        data_antiga = data
+                        data_formatada = f'{data[-2:]}/{data[5:7]}'
+                        parte_mensagem_enviara.append(f'### *{data_formatada}*')
 
-                parte_mensagem_enviara.append(f'- {infos[3]} - {infos[2]} {materia_emojis[infos[2]]}')
+                    parte_mensagem_enviara.append(f'- {infos[3]} - {infos[2]} {materia_emojis[infos[2]]}')
 
-                mensagem.extend(parte_mensagem_enviara)
-                if infos[4] != 'Vazio':
-                    descricao = infos[4].replace('\n', '\n> ')
-                    mensagem.append(f'> {descricao}')
-                mensagem.append('')
+                    mensagem.extend(parte_mensagem_enviara)
+                    if infos[4] != 'Vazio':
+                        descricao = infos[4].replace('\n', '\n> ')
+                        mensagem.append(f'> {descricao}')
+                    mensagem.append('')
 
-        else:
-            mensagem.append("Não a nenhum evento programado")
+            else:
+                mensagem.append("Não a nenhum evento programado")
 
-        mensagem_final = '\n'.join(mensagem)
+            mensagem_final = '\n'.join(mensagem)
 
-        client.send_message(amigo, mensagem_final)
+            client.send_message(amigo, mensagem_final)
+        sleep(30)
