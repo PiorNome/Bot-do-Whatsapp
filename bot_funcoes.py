@@ -140,6 +140,7 @@ def adicionar_bd(texto:str) -> tuple[int]:
         formatos = ("%d/%m/%y", "%d/%m/%Y", "%d/%m")
     
         try:
+            print(f"Data colocada pelo usuario: {data}")
             data_objeto = datetime.strptime(data, formatos[0])
             print("Data valida")
         except:
@@ -149,7 +150,7 @@ def adicionar_bd(texto:str) -> tuple[int]:
             except:
                 try:
                     data_objeto = datetime.strptime(data, formatos[2])
-                    data_objeto.replace(year=2026)
+                    data_objeto = data_objeto.replace(year=2026)
                     print("Data valida")
                 except:
                     print("Data invalida")
@@ -237,6 +238,7 @@ def buscar_eventos(quando:str='') -> list[tuple]:
             )
         
         resultados = curso.fetchall()
+        print(f"Eventos pegos: {resultados}")
     except Exception as e:
         print(f'Erro no buscar_eventos: {e}')
     finally:

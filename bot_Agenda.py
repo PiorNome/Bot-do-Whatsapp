@@ -12,7 +12,8 @@ client = NewClient("teste.db")
 
 @client.event(ConnectedEv)
 def on_connected(client: NewClient, event: ConnectedEv):
-    threading.Thread(target=bot_funcoes.tarefa, args=client, daemon=True).start()
+    threading.Thread(target=bot_funcoes.tarefa, args=(client,), daemon=True).start()
+    pass
 
 with open('emojis_materias.json', 'r', encoding='utf-8') as f:
     materia_emojis = json.load(f)
