@@ -41,6 +41,10 @@ def on_message(client: NewClient, event: MessageEv):
     texto = event.Message.conversation or event.Message.extendedTextMessage.text or ""
     if not texto:
         return 
+    
+    # 3. Proteção contra o Status (Ignora mensagens que vem do Status)
+    if event.Info.MessageSource.Chat.Server in ["broadcast", "g.us", "newsletter"]:
+        return
 
 
     resposta = []
@@ -48,7 +52,9 @@ def on_message(client: NewClient, event: MessageEv):
     remetente_jid = event.Info.MessageSource.Chat 
     numero = event.Info.MessageSource.Sender.User
 
-    if str(numero) == "173633364353118":
+    bot = os.getenv("BOT")
+
+    if str(numero) == bot:
         print('Mensagem do proprio bot')
         return
     
@@ -62,10 +68,6 @@ def on_message(client: NewClient, event: MessageEv):
     # encoding='utf-8' = garante que acentos e emojis não deem erro
     with open("logs_mensagens.txt", "a", encoding="utf-8") as arquivo:
         arquivo.write(f"[{agora}]\nUser: {event.Info.MessageSource.Chat.User}\nServer: {event.Info.MessageSource.Chat.Server}\nMensagem: {texto}\n-----------------------------\n")
-
-    # 3. Proteção contra o Status (Ignora mensagens que vem do Status)
-    if event.Info.MessageSource.Chat.Server in ["broadcast", "g.us", "newsletter"]:
-        return
     
     try:
         print(f'Pessoa mandou: {texto}')

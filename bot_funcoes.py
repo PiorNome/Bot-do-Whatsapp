@@ -367,7 +367,7 @@ def tarefa(client: NewClient):
         dia_da_semana = agora.weekday()  # Segunda=0, Sexta=4
         hora_atual = agora.strftime("%H:%M")
         if dia_da_semana == 4 and hora_atual == "15:15":
-            amigo = build_jid(os.getenv("AMIGO"))
+            comunidade = build_jid(os.getenv("GRUPO_COMUNIDADE_TESTE"), "g.us")
             with open('emojis_materias.json', 'r', encoding='utf-8') as f:
                 materia_emojis = json.load(f)
 
@@ -416,5 +416,6 @@ def tarefa(client: NewClient):
 
             mensagem_final = '\n'.join(mensagem)
 
-            client.send_message(amigo, mensagem_final)
-        sleep(30)
+            client.send_message(comunidade, mensagem_final)
+            sleep(120)
+        sleep(20)
