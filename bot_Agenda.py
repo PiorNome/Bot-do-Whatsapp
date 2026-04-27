@@ -1,5 +1,6 @@
 import os, time, json, threading
 import bot_funcoes
+from datetime import datetime
 from neonize.client import NewClient
 from neonize.events import MessageEv, ConnectedEv
 from dotenv import load_dotenv
@@ -27,6 +28,7 @@ with open('emojis_materias.json', 'r', encoding='utf-8') as f:
 # Usando o que o seu terminal encontrou: 'event'
 @client.event(MessageEv)
 def on_message(client: NewClient, event: MessageEv):
+    print(f"Mensagem recebida do CHAT ID: {event.Info.MessageSource.Chat}")
 
     hora_mensagem = event.Info.Timestamp / 1000
     print(f"hora inicio: {hora_inicio}")
@@ -40,9 +42,6 @@ def on_message(client: NewClient, event: MessageEv):
     if not texto:
         return 
 
-    # 3. Proteção contra o Status (Ignora mensagens que vem do Status)
-    if event.Info.MessageSource.Chat == "status@broadcast":
-        return
 
     resposta = []
     # remetente_jid já é o objeto que o WhatsApp precisa para responder
@@ -55,6 +54,18 @@ def on_message(client: NewClient, event: MessageEv):
     
     msg = event.Message
     texto = msg.conversation or (msg.extendedTextMessage and msg.extendedTextMessage.text) or ""
+
+    # Pega a data e hora atual para o log fazer sentido
+    agora = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+    
+    # 'a' = append (anexa no final do arquivo)
+    # encoding='utf-8' = garante que acentos e emojis não deem erro
+    with open("logs_mensagens.txt", "a", encoding="utf-8") as arquivo:
+        arquivo.write(f"[{agora}]\nUser: {event.Info.MessageSource.Chat.User}\nServer: {event.Info.MessageSource.Chat.Server}\nMensagem: {texto}\n-----------------------------\n")
+
+    # 3. Proteção contra o Status (Ignora mensagens que vem do Status)
+    if event.Info.MessageSource.Chat.Server in ["broadcast", "g.us", "newsletter"]:
+        return
     
     try:
         print(f'Pessoa mandou: {texto}')
