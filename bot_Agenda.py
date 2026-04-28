@@ -3,6 +3,7 @@ import bot_funcoes
 from datetime import datetime
 from neonize.client import NewClient
 from neonize.events import MessageEv, ConnectedEv
+from neonize.utils import build_jid
 from dotenv import load_dotenv
 load_dotenv()
 representates = os.getenv('REPRESENTATES')
@@ -49,7 +50,7 @@ def on_message(client: NewClient, event: MessageEv):
 
     resposta = []
     # remetente_jid já é o objeto que o WhatsApp precisa para responder
-    remetente_jid = event.Info.MessageSource.Chat 
+    remetente_jid = event.Info.MessageSource.Chat
     numero = event.Info.MessageSource.Sender.User
 
     bot = os.getenv("BOT")
@@ -68,6 +69,34 @@ def on_message(client: NewClient, event: MessageEv):
     # encoding='utf-8' = garante que acentos e emojis não deem erro
     with open("logs_mensagens.txt", "a", encoding="utf-8") as arquivo:
         arquivo.write(f"[{agora}]\nUser: {event.Info.MessageSource.Chat.User}\nServer: {event.Info.MessageSource.Chat.Server}\nMensagem: {texto}\n-----------------------------\n")
+
+    with open("confirmacao.txt", "r", encoding="utf-8") as confirmacao:
+        pass
+        enviar = confirmacao.read()
+    
+    amigo = os.getenv("AMIGO")
+    if datetime.now().strftime("%d/%m/%Y") == enviar and numero == amigo:
+        texto = texto.strip()
+        if texto.lower() in ["s","si","sm","sim","yes","y"]:
+            client.send_message(remetente_jid, "Cronocrama Sendo enviado...")
+            comunidade = build_jid(os.getenv("GRUPO_COMUNIDADE_TESTE"), "g.us")
+
+            with open("cronograma.txt", "r", encoding="utf-8") as cronograma:
+                mensagem = cronograma.read()
+
+            time.sleep(2)
+            client.send_message(comunidade, mensagem)
+            time.sleep(1)
+
+            client.send_message(remetente_jid, "Cronograma Enviado")
+        else:
+            client.send_message(remetente_jid, "Então o envio terá que ser manual")
+
+        with open("confirmacao.txt", "w", encoding="utf-8") as desconfirmacao:
+            desconfirmacao.write("Sei lá, só precisava tirar o que tava")
+        with open("cronograma.txt", "r", encoding="utf-8") as descronograma:
+            descronograma.write("Sei lá, só precisava tirar o que tava")
+        return
     
     try:
         print(f'Pessoa mandou: {texto}')

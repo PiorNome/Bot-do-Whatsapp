@@ -417,5 +417,9 @@ def tarefa(client: NewClient):
             mensagem_final = '\n'.join(mensagem)
 
             client.send_message(comunidade, mensagem_final)
+            with open("confirmacao.txt", "w", encoding="utf-8") as confirmacao:
+                confirmacao.write(f"{datetime.now().strftime("%d/%m/%Y")}")
+            with open("confirmacao.txt", "w", encoding="utf-8") as cronocrama:
+                cronocrama.write(mensagem_final)
             sleep(120)
         sleep(20)
