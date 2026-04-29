@@ -367,7 +367,7 @@ def tarefa(client: NewClient):
         dia_da_semana = agora.weekday()  # Segunda=0, Sexta=4
         hora_atual = agora.strftime("%H:%M")
         if dia_da_semana == 4 and hora_atual == "14:30":
-            comunidade = build_jid(os.getenv("GRUPO_COMUNIDADE_TESTE"), "g.us")
+            amigo = build_jid(os.getenv("AMIGO"))
             with open('emojis_materias.json', 'r', encoding='utf-8') as f:
                 materia_emojis = json.load(f)
 
@@ -416,10 +416,10 @@ def tarefa(client: NewClient):
 
             mensagem_final = '\n'.join(mensagem)
 
-            client.send_message(comunidade, mensagem_final)
+            client.send_message(amigo, mensagem_final+"\n\nPosso enviar?")
             with open("confirmacao.txt", "w", encoding="utf-8") as confirmacao:
                 confirmacao.write(f"{datetime.now().strftime("%d/%m/%Y")}")
-            with open("confirmacao.txt", "w", encoding="utf-8") as cronocrama:
+            with open("cronograma.txt", "w", encoding="utf-8") as cronocrama:
                 cronocrama.write(mensagem_final)
             sleep(120)
         sleep(20)
