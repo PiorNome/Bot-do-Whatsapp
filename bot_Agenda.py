@@ -77,7 +77,7 @@ def on_message(client: NewClient, event: MessageEv):
     amigo = os.getenv("AMIGO")
     if datetime.now().strftime("%d/%m/%Y") == enviar and numero == amigo:
         texto = texto.strip()
-        if texto.lower() in ["s","si","sm","sim","yes","y"]:
+        if texto.lower() in ["s","si","sm","sim","yes","y", "pode", "sin"]:
             client.send_message(remetente_jid, "Cronocrama Sendo enviado...")
             comunidade = build_jid(os.getenv("GRUPO_COMUNIDADE_TESTE"), "g.us")
 

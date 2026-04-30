@@ -391,24 +391,63 @@ def tarefa(client: NewClient):
 
             mensagem = []
             if len(eventos_pegos) > 0: # eventos_pegos = (ID, Data, Matéria, Tipo, Descrição)
+                
+                mensagem.append('📅 CRONOGRAMA DA SEMANA')
+                mensagem.append('━━━━━━━━━━━━━━━━━')
+                mensagem.append(f'📍 *ESSA SEMANA* ({hoje.strftime("%d/%m")} - {sexta.strftime("%d/%m")}):')
 
-                data_antiga = ''
+                data_antiga = datetime.now()
+                primeira = True
+                proxima_semana = sexta + timedelta(days=1)
+                fim_proxima = proxima_semana + timedelta(days=7)
                 for infos in eventos_pegos:
                     parte_mensagem_enviara = []
                     print(f'Informação sendo colocado na resposta: {infos}')
 
-                    data = infos[1]
-                    if data_antiga != data:
-                        data_antiga = data
-                        data_formatada = f'{data[-2:]}/{data[5:7]}'
-                        parte_mensagem_enviara.append(f'### *{data_formatada}*')
+                    data_atual = datetime.strptime(infos[1], "%Y-%m-%d")
 
-                    parte_mensagem_enviara.append(f'- {infos[3]} - {infos[2]} {materia_emojis[infos[2]]}')
+                    if data_atual.date() <= sexta.date():
+                        
+                        if primeira or data_atual.date() != data_antiga.date():
+                            primeira = False
+                            data_antiga = datetime.strptime(data_atual.strftime('%d/%m/%Y'), '%d/%m/%Y')
+                            parte_mensagem_enviara.append(f'### {data_atual.strftime("%d/%m")}')
 
-                    mensagem.extend(parte_mensagem_enviara)
-                    if infos[4] != 'Vazio':
-                        descricao = infos[4].replace('\n', '\n> ')
-                        mensagem.append(f'> {descricao}')
+
+                        parte_mensagem_enviara.append(f'- {infos[3]} - {infos[2]} {materia_emojis[infos[2]]}')
+
+                        mensagem.extend(parte_mensagem_enviara)
+                        if infos[4] != 'Vazio':
+                            descricao = infos[4].replace('\n', '\n> ')
+                            mensagem.append(f'> {descricao}')
+
+                    elif data_atual.date() <= fim_proxima.date():
+                        if not f'📍 PRÓXIMA SEMANA ({proxima_semana.strftime("%d/%m")} - {fim_proxima.strftime("%d/%m")}):\n' in mensagem:
+                            parte_mensagem_enviara.append(f'📍 *PRÓXIMA SEMANA* ({proxima_semana.strftime("%d/%m")} - {fim_proxima.strftime("%d/%m")}):\n')
+
+                        if data_atual.date() != data_antiga.date():
+                            primeira = False
+                            data_antiga = datetime.strptime(data_atual.strftime('%d/%m/%Y'), '%d/%m/%Y')
+                            parte_mensagem_enviara.append(f'{data_atual.strftime("%d/%m")}')
+
+                        parte_mensagem_enviara.append(f'{infos[3]} - {infos[2]}')
+
+                        mensagem.extend(parte_mensagem_enviara)
+                        if infos[4] != 'Vazio':
+                            descricao = infos[4].replace('\n', '\n> ')
+                            mensagem.append(f'> {descricao}')
+                    
+                    else:
+                        if not '━━━━━━━━━━━━━━━━━━' in mensagem:
+                            parte_mensagem_enviara.append('━━━━━━━━━━━━━━━━━━')
+                        
+                        parte_mensagem_enviara.append(f'{data_atual.strftime("%d/%m")} {infos[3]} - {infos[2]}')
+
+                        mensagem.extend(parte_mensagem_enviara)
+                        if infos[4] != 'Vazio':
+                            descricao = infos[4].replace('\n', '\n> ')
+                            mensagem.append(f'> {descricao}')
+
                     mensagem.append('')
 
             else:
@@ -418,7 +457,7 @@ def tarefa(client: NewClient):
 
             client.send_message(amigo, mensagem_final+"\n\nPosso enviar?")
             with open("confirmacao.txt", "w", encoding="utf-8") as confirmacao:
-                confirmacao.write(f"{datetime.now().strftime("%d/%m/%Y")}")
+                confirmacao.write(f"{datetime.now().strftime('%d/%m/%Y')}")
             with open("cronograma.txt", "w", encoding="utf-8") as cronocrama:
                 cronocrama.write(mensagem_final)
             sleep(120)
