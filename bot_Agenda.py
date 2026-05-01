@@ -74,8 +74,10 @@ def on_message(client: NewClient, event: MessageEv):
         pass
         enviar = confirmacao.read()
     
-    amigo = os.getenv("AMIGO")
-    if datetime.now().strftime("%d/%m/%Y") == enviar and numero == amigo:
+    amigo_jid = os.getenv("AMIGO_JID")
+    print(f"Número: {numero}\nAmigo: {amigo_jid}")
+    print(f"Data TXT: {enviar}\nData Hoje: {datetime.now().strftime('%d/%m/%Y')}")
+    if datetime.now().strftime("%d/%m/%Y") == enviar and numero == amigo_jid:
         texto = texto.strip()
         if texto.lower() in ["s","si","sm","sim","yes","y", "pode", "sin"]:
             client.send_message(remetente_jid, "Cronocrama Sendo enviado...")
