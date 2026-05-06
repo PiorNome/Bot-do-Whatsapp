@@ -26,7 +26,7 @@ def on_connected(client: NewClient, event: ConnectedEv):
         thread_cronograma = threading.Thread(target=bot_funcoes.tarefa, args=(client,), daemon=True)
         thread_cronograma.start()
         print("🚀 Thread de tarefas iniciada!")
-    if thread_cronograma is None or not thread_deletar.is_alive():
+    if thread_deletar is None or not thread_deletar.is_alive():
         thread_deletar = threading.Thread(target=bot_funcoes.exclucao_atutomatica, daemon=True)
         thread_deletar.start()
         print("Thread de autodeletar iniciada")
