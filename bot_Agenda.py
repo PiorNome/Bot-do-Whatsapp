@@ -12,19 +12,24 @@ hora_inicio = time.time()
 
 client = NewClient("teste.db")
 
+with open('emojis_materias.json', 'r', encoding='utf-8') as f:
+    materia_emojis = json.load(f)
+
 thread_cronograma = None
+thread_deletar = None
 
 @client.event(ConnectedEv)
 def on_connected(client: NewClient, event: ConnectedEv):
-    global thread_cronograma
+    global thread_cronograma, thread_deletar
     # Só inicia a thread se ela ainda não existir
     if thread_cronograma is None or not thread_cronograma.is_alive():
         thread_cronograma = threading.Thread(target=bot_funcoes.tarefa, args=(client,), daemon=True)
         thread_cronograma.start()
         print("🚀 Thread de tarefas iniciada!")
-
-with open('emojis_materias.json', 'r', encoding='utf-8') as f:
-    materia_emojis = json.load(f)
+    if thread_cronograma is None or not thread_deletar.is_alive():
+        thread_deletar = threading.Thread(target=bot_funcoes.exclucao_atutomatica, daemon=True)
+        thread_deletar.start()
+        print("Thread de autodeletar iniciada")
 
 # Usando o que o seu terminal encontrou: 'event'
 @client.event(MessageEv)
@@ -69,10 +74,11 @@ def on_message(client: NewClient, event: MessageEv):
     # encoding='utf-8' = garante que acentos e emojis não deem erro
     with open("logs_mensagens.txt", "a", encoding="utf-8") as arquivo:
         arquivo.write(f"[{agora}]\nUser: {event.Info.MessageSource.Chat.User}\nServer: {event.Info.MessageSource.Chat.Server}\nMensagem: {texto}\n-----------------------------\n")
+        arquivo.close()
 
     with open("confirmacao.txt", "r", encoding="utf-8") as confirmacao:
-        pass
         enviar = confirmacao.read()
+        confirmacao.close()
     
     amigo_jid = os.getenv("AMIGO_JID")
     print(f"Número: {numero}\nAmigo: {amigo_jid}")
@@ -85,6 +91,7 @@ def on_message(client: NewClient, event: MessageEv):
 
             with open("cronograma.txt", "r", encoding="utf-8") as cronograma:
                 mensagem = cronograma.read()
+                cronograma.close()
 
             time.sleep(2)
             client.send_message(comunidade, mensagem)
@@ -98,7 +105,10 @@ def on_message(client: NewClient, event: MessageEv):
             desconfirmacao.write("Sei lá, só precisava tirar o que tava")
         with open("cronograma.txt", "r", encoding="utf-8") as descronograma:
             descronograma.write("Sei lá, só precisava tirar o que tava")
+        desconfirmacao.close()
+        descronograma.close()
         return
+    
     
     try:
         print(f'Pessoa mandou: {texto}')
@@ -109,37 +119,40 @@ def on_message(client: NewClient, event: MessageEv):
         if resultado[0] == 'agendar':
             print("comando agendar detectado")
 
-            if "1" in resultado[1]:
-                if resultado[1][0] == "1":
-                    resposta.append('O formato da *data* está *inválida*')
-                    resposta.append('Tente um desses formatos:')
-                    resposta.append('   *DD/MM/YY*')
-                    resposta.append('   ou')
-                    resposta.append('   *DD/MM/YYYY*')
-
-                if resultado[1][1] == "1":
-                    resposta.append('\n')
-                    resposta.append('*Matéria não encontrada*')
-                    resposta.append('Olhe no *suap* as matérias existentes')
-
-                if resultado[1][2] == "1":
-                    resposta.append('\n')
-                    resposta.append('Tipo do evento inválido')
-                    resposta.append('Só aceito prova, trabalho, atividade ou vazio')
-
-            elif resultado[1] == 'falta_agrs':
-                resposta.append('Não foi possivel agendar o evento por falta de informações')
-                resposta.append('*Como Usar o comando*:')
-                resposta.append("   agendar [data] , [tipo] , [materia] , [descrição(opcinal)]")
-                resposta.append('―――――――――――――――――――――――')
-                resposta.append("Dica:")
-                resposta.append("   Use \"tutorial agendar\" para obter mais informações")
-
-            elif resultado[1] == 'sem_permissão':
+            if resultado[1] == 'sem_permissão':
                 resposta.append('Você não tem permissão para usar esse comando')
-            
             else:
-                resposta.append('Evento salvo com sucesso')
+                for strings in resultado[1]:
+                    if "1" in strings:
+                        if strings[0] == "1":
+                            resposta.append('O formato da *data* está *inválida*')
+                            resposta.append('Tente um desses formatos:')
+                            resposta.append('   *DD/MM/YY*')
+                            resposta.append('   ou')
+                            resposta.append('   *DD/MM/YYYY*')
+
+                        if strings[1] == "1":
+                            resposta.append('\n')
+                            resposta.append('*Matéria não encontrada*')
+                            resposta.append('Olhe no *suap* as matérias existentes')
+
+                        if strings[2] == "1":
+                            resposta.append('\n')
+                            resposta.append('Tipo do evento inválido')
+                            resposta.append('Só aceito prova, trabalho, atividade ou vazio')
+
+                    elif strings == 'falta_agrs':
+                        resposta.append('Não foi possivel agendar o evento por falta de informações')
+                        resposta.append('*Como Usar o comando*:')
+                        resposta.append("   agendar [data] , [tipo] , [materia] , [descrição(opcinal)]")
+                        resposta.append('―――――――――――――――――――――――')
+                        resposta.append("Dica:")
+                        resposta.append("   Use \"tutorial agendar\" para obter mais informações")
+                    
+                    else:
+                        resposta.append('Evento salvo com sucesso')
+                    
+                    resposta.append("\n━━━━━━━━━━━━━━━━━\n")
 
         elif resultado[0] == 'Najudar':
             resposta.append('Não entendi o comando usado!')
@@ -240,6 +253,7 @@ def on_message(client: NewClient, event: MessageEv):
                 if numero in representates:
                     resposta.append("   agendar [data] , [tipo] , [materia] , [descrição(opcinal)]")
                     resposta.append("   editar [id] , [o campo que você que mudar] , [o valor que você quer]")
+                    resposta.append("   deletar [id do evento]")
                     resposta.append("   listar")
                 
                 resposta.append("   status")
@@ -261,6 +275,7 @@ def on_message(client: NewClient, event: MessageEv):
                 if numero in representates:
                     resposta.append("   agendar [data] , [tipo] , [materia] , [descrição(opcinal)]")
                     resposta.append("   editar [id] , [o campo que você que mudar] , [o valor que você quer]")
+                    resposta.append("   deletar [id do evento]")
                     resposta.append("   listar")
 
                 resposta.append("   status")
@@ -274,7 +289,7 @@ def on_message(client: NewClient, event: MessageEv):
                 resposta.append("Dica:")
                 resposta.append("   Se você usar \"tutorial [comando]\", você irar ver um tutorial mais completo do comando especificado")
 
-            elif resultado[1] in ('agendar', 'status', 'hoje', 'amanha', 'amanhã', 'semana', 'editar', 'tutorial', 'listar',):
+            elif resultado[1] in ('agendar', 'status', 'hoje', 'amanha', 'amanhã', 'semana', 'editar', 'tutorial', 'listar','deletar',):
                 if resultado[1] == 'agendar':
                     resposta.append("Com o comando *agendar*, você registra uma nova atividade no cronograma.")
                     resposta.append("Para usar o comando *agendar* você precisa ser *ADMIN*")
@@ -353,9 +368,31 @@ def on_message(client: NewClient, event: MessageEv):
                     resposta.append("   Se você usar \"tutorial [comando]\", você irar ver um tutorial mais completo do comando especificado")
                     resposta.append("> Use \"*tutorial*\" para ver os comandos existentes")
 
+                elif resultado[1] == 'deletar':
+                    resposta.append("Com o comando *deletar* você pode apagar um evento")
+                    resposta.append("*Como usar?*")
+                    resposta.append("   deletar [id]")
+                    resposta.append("―――――――――――――――――――――――")
+                    resposta.append("Dica:")
+                    resposta.append("   Use o comando \"listar\" para saber o id dos eventos")
+        
+        elif resultado[0] == 'deletar':
+            if resultado[1] == 'sem_permissão':
+                resposta.append("Você não tem permissão para usar esse comando")
+            elif resultado[1] == -1:
+                resposta.append("Desculpa, ouve uma falha interna.")
+            elif resultado[1] == 0:
+                resposta.append("Não achei o evento que você queria")
+                resposta.append("use o comando \"listar\" para saber quais eventos e o id deles")
+            elif resultado[1] == 1:
+                resposta.append("Evento apagado da face da terra com sucesso")
+            elif resultado[1] >= 2:
+                resposta.append("Aparentemente ouve um erro e apaguei mais de um evento.")
+                
+
         resposta_final = '\n'.join(resposta)
 
-        client.send_message(remetente_jid, resposta_final)
+        client.send_message(remetente_jid, resposta_final.strip())
 
         print(f"A mensagem que será enviada é: {resposta}")
     except:

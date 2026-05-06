@@ -8,7 +8,7 @@ load_dotenv()
 def decidir_destino(texto:str, numero_celular:str) -> tuple[str, any]:
     print(f"[Função: decidir_destino]")
     print(f"Recebeu {texto}")
-    comandos = ['agendar', 'status', 'hoje', 'amanha', 'amanhã', 'tutorial', 'editar', 'semana', 'listar']
+    comandos = ['agendar', 'status', 'hoje', 'amanha', 'amanhã', 'tutorial', 'editar', 'semana', 'listar', 'deletar']
     lista_strs = texto.split()
     numeros = os.getenv('REPRESENTATES')
     REPRESENTATES = numeros.split(' , ')
@@ -19,24 +19,35 @@ def decidir_destino(texto:str, numero_celular:str) -> tuple[str, any]:
     if lista_strs[0] in comandos:
         if lista_strs[0] == 'agendar':
             comando = 'agendar'
-
             print(f"Entrou como comando agendar")
-            retorna = ''
             if not numero_celular in REPRESENTATES:
                 print(f"O número {numero_celular} não é ADMIN")
                 return (comando, 'sem_permissão')
             print(f"O número {numero_celular} é ADMIN")
-            erros = adicionar_bd(texto)
+            
+            agendamentos = texto.split('agendar')[1:]
+            print(f"Agendamentos separados assim: {agendamentos}")
+            erros = []
+            for evento in agendamentos:
+                erros.append(adicionar_bd(evento.strip()))
             print(f"Função adicionar_bd retornou: {erros}")
 
-            if erros[0] == -1:
-                return (comando, 'falta_agrs')
-
-            for i in erros:
-                retorna += str(i)
+            retorna = []
+            ind_erro = ""
+            for erro in erros:
+                print(f"Peguei uma tupla: {erro}")
+                if -1 in erro:
+                        print(f'Tinha o valor -1, falta de argumentos')
+                        retorna.append('falta_agrs')
+                        continue
+                
+                ind_erro = str(erro[0]) + str(erro[1]) + str(erro[2])
+                print(f"Variavel ind_erro: {ind_erro}")
+                retorna.append(ind_erro)
+                ind_erro = ""
             print(f"Será retornado: {comando} e {retorna}")
             print("[Acabou a função decidir_destino]")
-            return (comando,retorna)
+            return (comando,tuple(retorna),)
         
         elif lista_strs[0] == 'status' or lista_strs[0] == 'hoje' or lista_strs[0] == 'amanha' or lista_strs[0] == 'amanhã' or lista_strs[0] == 'listar':
             comando = lista_strs[0]
@@ -107,6 +118,23 @@ def decidir_destino(texto:str, numero_celular:str) -> tuple[str, any]:
 
             print('[Acabou a função decidir_destino]')
             return (comando, eventos_pegos)
+        
+        elif lista_strs[0] == 'deletar':
+            comando = 'deletar'
+
+            if not numero_celular in REPRESENTATES:
+                print(f"O número {numero_celular} não é ADMIN")
+                return (comando, 'sem_permissão')
+            
+            if not lista_strs[1].isdecimal():
+                return "nao_decimal"
+            
+            qnt_deletado = comando_deletar(lista_strs[1])
+            if qnt_deletado == -1:
+                return (comando, 'falha_interna',)
+            
+            return (comando, qnt_deletado,)
+
 
     print("[Acabou a função decidir_destino]")
     return ('Najudar', None)
@@ -119,8 +147,6 @@ def adicionar_bd(texto:str) -> tuple[int]:
 
     print("pegou as materias")
     retorna = [0, 0, 0] # se algum for igual a 1, significa que deu erro. Data é o 1º elemento, materia é o 2º elemento e o tipo é o 3º elemento
-    
-    texto = texto[7:]
 
     informacoes = texto.split(",")
     print(f"Separou as informações")
@@ -182,7 +208,7 @@ def adicionar_bd(texto:str) -> tuple[int]:
         return tuple(retorna)
     print("Por falta de argumentos, será retornado (-1)")
     print("[Acabou a função adicionar_bd]")
-    return [-1]
+    return (-1,)
 
 def buscar_evento_semana(hoje, sexta):
     print("[Função buscar_evento_semana]")
@@ -249,10 +275,10 @@ def buscar_eventos(quando:str='') -> list[tuple]:
 
 def editar_bd(texto:str):
     print("[Função editar_bd]")
-    infos = texto[6:].split(',')
+    infos = [item.strip() for item in texto[6:].split(',')]
     print(f'texto separado: {infos}')
 
-    if len(infos) > 3:
+    if len(infos) > 3 and infos[1] not in ('descrição', 'descriçao', 'descricão', 'descricao',):
         print('Muitos argumentos')
         print('[Acabou função editar_bd]')
         return 'muitos_agrs'
@@ -282,7 +308,7 @@ def editar_bd(texto:str):
     if not campo_alvo in ('data_evento', 'data', 'evento_data','evento','materia','matéria','tipo','descrição', 'descriçao', 'descricão', 'descricao',):
         return 'campo_invalido'
 
-    if campo_alvo in ('data_evento', 'data', 'evento_data','evento',):
+    if campo_alvo in ('data_evento', 'data', 'evento_data',):
         formatos = ("%d/%m/%y", "%d/%m/%Y", "%d/%m")
     
         try:
@@ -350,6 +376,7 @@ def editar_bd(texto:str):
     
     if campo_alvo in ('descrição', 'descriçao', 'descricão', 'descricao',):
         print('Entrou no caso de Descrição')
+        novo_valor = ', '.join(infos[2:])
         curso.execute(
             '''UPDATE eventos SET descricao = ?
             WHERE id = ?''', (novo_valor, id_evento,))
@@ -361,12 +388,32 @@ def editar_bd(texto:str):
     print('Se por algum acaso, esse print aparecer, é porque deu um bug')
     print('\033[31mRESOLVA\033[0m')
 
+def comando_deletar(id:str) -> int:
+    try:
+        conexao = sqlite3.connect("cronograma.db")
+        curso = conexao.cursor()
+
+        curso.execute(
+            '''DELETE FROM eventos WHERE id = ?''', (id,)
+        )
+
+        deletados = curso.rowcount
+        conexao.commit()
+    except:
+        print("Falha ao tentar excluir")
+        deletados = -1
+    finally:
+        curso.close()
+        conexao.close()
+    
+    return deletados
+
 def tarefa(client: NewClient):
     while True:
         agora = datetime.now()
         dia_da_semana = agora.weekday()  # Segunda=0, Sexta=4
         hora_atual = agora.strftime("%H:%M")
-        if dia_da_semana == 5 and hora_atual == "14:30":
+        if dia_da_semana == 4 and hora_atual == "14:30":
             amigo = build_jid(os.getenv("AMIGO"))
             with open('emojis_materias.json', 'r', encoding='utf-8') as f:
                 materia_emojis = json.load(f)
@@ -387,19 +434,20 @@ def tarefa(client: NewClient):
             sexta = hoje + timedelta(days=dias_faltando)
             sexta_formatada = sexta.strftime("%Y-%m-%d")
 
-            eventos_pegos = buscar_evento_semana(hoje_formatado, sexta_formatada)
+            eventos_pegos = buscar_eventos()
 
             mensagem = []
+            meses = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']
             if len(eventos_pegos) > 0: # eventos_pegos = (ID, Data, Matéria, Tipo, Descrição)
                 
                 mensagem.append('📅 CRONOGRAMA DA SEMANA')
                 mensagem.append('━━━━━━━━━━━━━━━━━')
-                mensagem.append(f'📍 *ESSA SEMANA* ({hoje.strftime("%d/%m")} - {sexta.strftime("%d/%m")}):')
 
                 data_antiga = datetime.now()
                 primeira = True
                 proxima_semana = sexta + timedelta(days=1)
                 fim_proxima = proxima_semana + timedelta(days=7)
+                primeira_barra = False
                 for infos in eventos_pegos:
                     parte_mensagem_enviara = []
                     print(f'Informação sendo colocado na resposta: {infos}')
@@ -407,6 +455,8 @@ def tarefa(client: NewClient):
                     data_atual = datetime.strptime(infos[1], "%Y-%m-%d")
 
                     if data_atual.date() <= sexta.date():
+                        if not f'📍 *ESSA SEMANA* ({hoje.strftime("%d/%m")} - {sexta.strftime("%d/%m")}):' in mensagem:
+                            mensagem.append(f'📍 *ESSA SEMANA* ({hoje.strftime("%d/%m")} - {sexta.strftime("%d/%m")}):')
                         
                         if primeira or data_atual.date() != data_antiga.date():
                             primeira = False
@@ -430,7 +480,7 @@ def tarefa(client: NewClient):
                             data_antiga = datetime.strptime(data_atual.strftime('%d/%m/%Y'), '%d/%m/%Y')
                             parte_mensagem_enviara.append(f'{data_atual.strftime("%d/%m")}')
 
-                        parte_mensagem_enviara.append(f'{infos[3]} - {infos[2]}')
+                        parte_mensagem_enviara.append(f'{materia_emojis[infos[2]]} {infos[3]} - {infos[2]}')
 
                         mensagem.extend(parte_mensagem_enviara)
                         if infos[4] != 'Vazio':
@@ -438,10 +488,13 @@ def tarefa(client: NewClient):
                             mensagem.append(f'> {descricao}')
                     
                     else:
-                        if not '━━━━━━━━━━━━━━━━━━' in mensagem:
-                            parte_mensagem_enviara.append('━━━━━━━━━━━━━━━━━━')
+                        if not primeira_barra:
+                            mensagem.append("━━━━━━━━━━━━━━━━━")
+                            primeira_barra = True
+                        if not f"📅 *{meses[int(data_atual.strftime('%m'))-1]}*" in mensagem:
+                            mensagem.append(f"📅 *{meses[int(data_atual.strftime('%m'))-1]}*")
                         
-                        parte_mensagem_enviara.append(f'{data_atual.strftime("%d/%m")} {infos[3]} - {infos[2]}')
+                        parte_mensagem_enviara.append(f'{materia_emojis[infos[2]]} {data_atual.strftime("%d/%m")} {infos[3]} - {infos[2]}')
 
                         mensagem.extend(parte_mensagem_enviara)
                         if infos[4] != 'Vazio':
@@ -462,3 +515,33 @@ def tarefa(client: NewClient):
                 cronocrama.write(mensagem_final)
             sleep(120)
         sleep(20)
+
+def exclucao_atutomatica():
+    while True:
+        try:
+            conexao = sqlite3.connect('cronograma.db')
+            curso = conexao.cursor()
+            
+            hoje = datetime.now().strftime("%Y-%m-%d")
+            
+            # O SQLite deleta tudo de uma vez só! (Note a vírgula depois do 'hoje')
+            curso.execute(
+                '''DELETE FROM eventos WHERE data_evento < ?''', (hoje,)
+            )
+            
+            # Extra: rowcount te diz quantas linhas foram apagadas
+            deletados = curso.rowcount 
+            print(f"Limpeza do BD: {deletados} eventos antigos foram apagados.")
+            
+            conexao.commit()
+        
+        except Exception as e:
+            print(f"Erro na limpeza do banco: {e}")
+            
+        finally:
+            # O finally garante que a conexão vai fechar mesmo se der erro
+            curso.close()
+            conexao.close()
+
+        # Dorme por 24 horas
+        sleep(86400)
