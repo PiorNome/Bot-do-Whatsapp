@@ -1,6 +1,7 @@
 import os, sqlite3, json
 from time import sleep
 from datetime import *
+from dateutil.relativedelta import relativedelta
 from neonize.client import NewClient
 from neonize.utils import build_jid
 from dotenv import load_dotenv
@@ -9,13 +10,15 @@ def decidir_destino(texto:str, numero_celular:str) -> tuple[str, any]:
     print(f"[Função: decidir_destino]")
     print(f"Recebeu {texto}")
     comandos = ['agendar', 'status', 'hoje', 'amanha', 'amanhã', 'tutorial', 'editar', 'semana', 'listar', 'deletar']
-    lista_strs = texto.split()
+    lista_strs = texto.lower().split()
     numeros = os.getenv('REPRESENTATES')
     REPRESENTATES = numeros.split(' , ')
     print(f"Mensagem separada como: {lista_strs}")
 
     print(f"Comando da mensagem é: {lista_strs[0]}")
 
+    
+    print(f"A lista_strns tem {len(lista_strs)} de elementos")
     if lista_strs[0] in comandos:
         if lista_strs[0] == 'agendar':
             comando = 'agendar'
@@ -25,7 +28,10 @@ def decidir_destino(texto:str, numero_celular:str) -> tuple[str, any]:
                 return (comando, 'sem_permissão')
             print(f"O número {numero_celular} é ADMIN")
             
-            agendamentos = texto.split('agendar')[1:]
+            if "agendar" in texto: agendamentos = texto.split('agendar')[1:]
+            elif "Agendar" in texto: agendamentos = texto.split('Agendar')[1:]
+            elif "AGENDAR" in texto: agendamentos = texto.split('AGENDAR')[1:]
+            else: return (comando, 'erro_escrita')
             print(f"Agendamentos separados assim: {agendamentos}")
             erros = []
             for evento in agendamentos:
@@ -134,8 +140,26 @@ def decidir_destino(texto:str, numero_celular:str) -> tuple[str, any]:
                 return (comando, 'falha_interna',)
             
             return (comando, qnt_deletado,)
-
-
+        
+    elif (qnt_lista_strs:= len(lista_strs)) in (2,3,):
+        passa = False
+        if qnt_lista_strs == 2:
+            if (lista_strs[0] == "proximo" or lista_strs[0] == "próximo") and (lista_strs[1] == "mes" or lista_strs[1] == "mês"):
+                print("Passou em 2 elementos")
+                passa = True
+        else:
+            if (lista_strs[0] == "mes" or lista_strs[0] == "mês") and lista_strs[1] == "que" and lista_strs[2] == "vem":
+                print("Passou em 3 elementos")
+                passa = True
+        
+        if passa:
+            comando = 'proximo_mes'
+            hoje = datetime.now()
+            proximo_mes = hoje + relativedelta(months=1)
+            data = proximo_mes.strftime("%Y-%m")
+            eventos= eventos_proximo_mes(data)
+            return (comando, eventos,)
+        
     print("[Acabou a função decidir_destino]")
     return ('Najudar', None)
 
@@ -185,7 +209,7 @@ def adicionar_bd(texto:str) -> tuple[int]:
         
         encontrou_materia = False
         for materia_key in MATERIAS.keys():
-            if materia in MATERIAS[materia_key]:
+            if materia.lower() in MATERIAS[materia_key]:
                 materia = materia_key
                 encontrou_materia = True
                 print(f"Encontro a matéria: {materia}")
@@ -269,6 +293,7 @@ def buscar_eventos(quando:str='') -> list[tuple]:
     except Exception as e:
         print(f'Erro no buscar_eventos: {e}')
     finally:
+        curso.close()
         conexao.close()
     print('[acabou a função buscar_eventos]')
     return resultados
@@ -407,6 +432,23 @@ def comando_deletar(id:str) -> int:
         conexao.close()
     
     return deletados
+
+def eventos_proximo_mes(ano_mes:str):
+    try:
+        conexao = sqlite3.connect('cronograma.db')
+        curso = conexao.cursor()
+        curso.execute(
+            '''SELECT * FROM eventos WHERE data_evento LIKE ?''', (ano_mes,)
+        )
+        eventos = curso.fetchall()
+    except:
+        print("Falha ao buscar proximo mês")
+        eventos = None
+    finally:
+        curso.close()
+        conexao.close()
+
+    return eventos
 
 def tarefa(client: NewClient):
     while True:

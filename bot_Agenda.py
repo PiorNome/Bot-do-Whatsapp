@@ -113,7 +113,7 @@ def on_message(client: NewClient, event: MessageEv):
     try:
         print(f'Pessoa mandou: {texto}')
         
-        resultado:list[str, any] = bot_funcoes.decidir_destino(texto.lower(), numero)
+        resultado:list[str, any] = bot_funcoes.decidir_destino(texto, numero)
         print(f"Função decidir_destino retornou: {resultado}")
 
         if resultado[0] == 'agendar':
@@ -121,6 +121,8 @@ def on_message(client: NewClient, event: MessageEv):
 
             if resultado[1] == 'sem_permissão':
                 resposta.append('Você não tem permissão para usar esse comando')
+            elif resultado[1] == 'erro_escrita':
+                resposta.append("Por Favor, escreva agendar, Agendar ou AGENDAR")
             else:
                 for strings in resultado[1]:
                     if "1" in strings:
@@ -176,7 +178,7 @@ def on_message(client: NewClient, event: MessageEv):
             resposta.append("   Se você usar \"tutorial [comando]\", você irar ver um tutorial mais completo do comando especificado")
 
 
-        elif resultado[0] == 'status' or resultado[0] == 'hoje' or resultado[0] == 'amanha' or resultado[0] == 'amanhã' or resultado[0] == 'semana' or resultado[0] == 'listar':
+        elif resultado[0] == 'status' or resultado[0] == 'hoje' or resultado[0] == 'amanha' or resultado[0] == 'amanhã' or resultado[0] == 'semana' or resultado[0] == 'listar' or resultado[0] == 'proximo_mes':
             if resultado[1]: # Resultado[1] = (ID, Data, Matéria, Tipo, Descrição)
 
                 data_antiga = ''
