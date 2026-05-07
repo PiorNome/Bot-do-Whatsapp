@@ -321,7 +321,7 @@ def editar_bd(texto:str):
             except:
                 try:
                     data_objeto = datetime.strptime(novo_valor, formatos[2])
-                    data_objeto.replace(year=2026)
+                    data_objeto = data_objeto.replace(year=2026)
                     print("Data valida")
                 except:
                     print("Data invalida")
@@ -525,6 +525,38 @@ def exclucao_atutomatica():
             hoje = datetime.now().strftime("%Y-%m-%d")
             
             # O SQLite deleta tudo de uma vez só! (Note a vírgula depois do 'hoje')
+
+            curso.execute(
+                '''SELECT * FROM eventos WHERE data_evento < ?''', (hoje,)
+            )
+            eventos = curso.fetchall()
+
+            resposta = []
+            if len(eventos) > 0: # Resultado[1] = (ID, Data, Matéria, Tipo, Descrição)
+
+                data_antiga = ''
+                for infos in eventos:
+                    parte_mensagem_enviara = []
+                    print(f'Informação sendo colocado na resposta: {infos}')
+
+                    data = infos[1]
+                    if data_antiga != data:
+                        data_antiga = data
+                        data_formatada = f'{data[-2:]}/{data[5:7]}'
+                        parte_mensagem_enviara.append(f'### *{data_formatada}*')
+
+                    parte_mensagem_enviara.append(f'🆔: {infos[0]}')
+
+                    parte_mensagem_enviara.append(f'- {infos[3]} - {infos[2]}')
+
+                    resposta.extend(parte_mensagem_enviara)
+                    if infos[4] != 'Vazio':
+                        descricao = infos[4].replace('\n', '\n> ')
+                        resposta.append(f'> {descricao}')
+                    resposta.append('')
+
+            
+
             curso.execute(
                 '''DELETE FROM eventos WHERE data_evento < ?''', (hoje,)
             )
@@ -534,6 +566,11 @@ def exclucao_atutomatica():
             print(f"Limpeza do BD: {deletados} eventos antigos foram apagados.")
             
             conexao.commit()
+            if deletados > 0:
+                logs_deletados = open("logs_deletados.txt", "a")
+                resposta_final = '\n'.join(resposta)
+                logs_deletados.write(f"{deletados} eventos foram deletados.\n\n{resposta_final}\n\n\n\n\n")
+                logs_deletados.close()
         
         except Exception as e:
             print(f"Erro na limpeza do banco: {e}")
