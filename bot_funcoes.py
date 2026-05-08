@@ -459,7 +459,7 @@ def tarefa(client: NewClient):
         agora = datetime.now()
         dia_da_semana = agora.weekday()  # Segunda=0, Sexta=4
         hora_atual = agora.strftime("%H:%M")
-        if dia_da_semana == 4 and hora_atual == "14:30":
+        if dia_da_semana == 4 and hora_atual == "15:30":
             amigo = build_jid(os.getenv("AMIGO"))
             with open('emojis_materias.json', 'r', encoding='utf-8') as f:
                 materia_emojis = json.load(f)
@@ -518,13 +518,13 @@ def tarefa(client: NewClient):
                             mensagem.append(f'> {descricao}')
 
                     elif data_atual.date() <= fim_proxima.date():
-                        if not f'📍 PRÓXIMA SEMANA ({proxima_semana.strftime("%d/%m")} - {fim_proxima.strftime("%d/%m")}):\n' in mensagem:
+                        if not f'📍 *PRÓXIMA SEMANA* ({proxima_semana.strftime("%d/%m")} - {fim_proxima.strftime("%d/%m")}):\n' in mensagem:
                             parte_mensagem_enviara.append(f'📍 *PRÓXIMA SEMANA* ({proxima_semana.strftime("%d/%m")} - {fim_proxima.strftime("%d/%m")}):\n')
 
                         if data_atual.date() != data_antiga.date():
                             primeira = False
                             data_antiga = datetime.strptime(data_atual.strftime('%d/%m/%Y'), '%d/%m/%Y')
-                            parte_mensagem_enviara.append(f'{data_atual.strftime("%d/%m")}')
+                            parte_mensagem_enviara.append(f'### {data_atual.strftime("%d/%m")}')
 
                         parte_mensagem_enviara.append(f'{materia_emojis[infos[2]]} {infos[3]} - {infos[2]}')
 
