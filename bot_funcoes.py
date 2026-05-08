@@ -554,7 +554,7 @@ def tarefa(client: NewClient):
 
             mensagem_final = '\n'.join(mensagem)
 
-            client.send_message(amigo, mensagem_final+"\n\nPosso enviar?")
+            client.send_message(amigo, mensagem_final+"\n\nPosso enviar?\nSe você quiser mandar uma mensagem no final, escreva assim: sim, [mensagem que você quer]")
             with open("confirmacao.txt", "w", encoding="utf-8") as confirmacao:
                 confirmacao.write(f"{datetime.now().strftime('%d/%m/%Y')}")
             with open("cronograma.txt", "w", encoding="utf-8") as cronocrama:

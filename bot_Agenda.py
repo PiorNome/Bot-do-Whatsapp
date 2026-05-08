@@ -85,13 +85,18 @@ def on_message(client: NewClient, event: MessageEv):
     print(f"Data TXT: {enviar}\nData Hoje: {datetime.now().strftime('%d/%m/%Y')}")
     if datetime.now().strftime("%d/%m/%Y") == enviar and numero == amigo_jid:
         texto = texto.strip()
-        if texto.lower() in ["s","si","sm","sim","yes","y", "pode", "sin"]:
+        lista_strgs = texto.split(",")
+        if lista_strgs[0] in ["s","si","sm","sim","yes","y", "pode", "sin"]:
             client.send_message(remetente_jid, "Cronocrama Sendo enviado...")
             comunidade = build_jid(os.getenv("GRUPO_COMUNIDADE_TESTE"), "g.us")
 
             with open("cronograma.txt", "r", encoding="utf-8") as cronograma:
                 mensagem = cronograma.read()
                 cronograma.close()
+
+            if len(lista_strgs) > 1:
+                mensagem += "\n━━━━━━━━━━━━━━━━━\n"
+                mensagem += ",".join(lista_strgs[1:])
 
             time.sleep(2)
             client.send_message(comunidade, mensagem)
@@ -189,7 +194,7 @@ def on_message(client: NewClient, event: MessageEv):
                     print(f'Informação sendo colocado na resposta: {infos}')
 
                     data = infos[1]
-                    if mes_atual != meses[int(data[5:7])-1] and resultado[0] == 'proximo_mes': # 2026-05-08
+                    if mes_atual != meses[int(data[5:7])-1] and not resultado[0] in ('hoje','amanha','amanhã','semana'): # 2026-05-08
                         mes_atual = meses[int(data[5:7])-1]
                         resposta.append(f"📅 *{mes_atual}*")
                     if data_antiga != data:
