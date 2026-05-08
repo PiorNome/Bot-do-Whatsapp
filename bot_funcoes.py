@@ -467,7 +467,7 @@ def tarefa(client: NewClient):
         agora = datetime.now()
         dia_da_semana = agora.weekday()  # Segunda=0, Sexta=4
         hora_atual = agora.strftime("%H:%M")
-        if dia_da_semana == 4 and hora_atual == "14:15":
+        if dia_da_semana == 4 and hora_atual == "14:30":
             amigo = build_jid(os.getenv("AMIGO"))
             with open('emojis_materias.json', 'r', encoding='utf-8') as f:
                 materia_emojis:dict = json.load(f)
