@@ -467,10 +467,10 @@ def tarefa(client: NewClient):
         agora = datetime.now()
         dia_da_semana = agora.weekday()  # Segunda=0, Sexta=4
         hora_atual = agora.strftime("%H:%M")
-        if dia_da_semana == 4 and hora_atual == "14:05":
+        if dia_da_semana == 4 and hora_atual == "14:15":
             amigo = build_jid(os.getenv("AMIGO"))
             with open('emojis_materias.json', 'r', encoding='utf-8') as f:
-                materia_emojis = json.load(f)
+                materia_emojis:dict = json.load(f)
 
             eventos_pegos = buscar_eventos("tarefa")
             domingo = datetime.now() + timedelta(days=2)
@@ -480,7 +480,7 @@ def tarefa(client: NewClient):
             if len(eventos_pegos) > 0: # eventos_pegos = (ID, Data, Matéria, Tipo, Descrição)
                 
                 mensagem.append('📅 CRONOGRAMA DA SEMANA')
-                mensagem.append('━━━━━━━━━━━━━━━━━')
+                mensagem.append('\n━━━━━━━━━━━━━━━━━')
 
                 data_antiga = datetime.now() + timedelta(days=1)
                 primeira = True
@@ -488,6 +488,8 @@ def tarefa(client: NewClient):
                 proxima_semana = sabado + timedelta(days=1)
                 fim_proxima = proxima_semana + timedelta(days=7)
                 primeira_barra = False
+                with open('constantes.json', 'r', encoding='utf-8') as f:
+                    MATERIAS:dict = json.load(f)
                 for infos in eventos_pegos:
                     parte_mensagem_enviara = []
                     print(f'Informação sendo colocado na resposta: {infos}')
@@ -495,8 +497,8 @@ def tarefa(client: NewClient):
                     data_atual = datetime.strptime(infos[1], "%Y-%m-%d")
 
                     if data_atual.date() <= sabado.date():
-                        if not f'📍 *ESSA SEMANA* ({domingo.strftime("%d/%m")} - {sabado.strftime("%d/%m")}):' in mensagem:
-                            mensagem.append(f'📍 *ESSA SEMANA* ({domingo.strftime("%d/%m")} - {sabado.strftime("%d/%m")}):')
+                        if not f'📍 *ESSA SEMANA* ({domingo.strftime("%d/%m")} - {sabado.strftime("%d/%m")}):\n' in mensagem:
+                            mensagem.append(f'📍 *ESSA SEMANA* ({domingo.strftime("%d/%m")} - {sabado.strftime("%d/%m")}):\n')
                         
                         if primeira or data_atual.date() != data_antiga.date():
                             primeira = False
@@ -520,7 +522,18 @@ def tarefa(client: NewClient):
                             data_antiga = datetime.strptime(data_atual.strftime('%d/%m/%Y'), '%d/%m/%Y')
                             parte_mensagem_enviara.append(f'### {data_atual.strftime("%d/%m")}')
 
-                        parte_mensagem_enviara.append(f'{materia_emojis[infos[2]]} {infos[3]} - {infos[2]}')
+                        if materia_emojis.get(infos[2]) is None:
+                            for materia_key in MATERIAS.keys():
+                                if infos[2].lower() in MATERIAS[materia_key]:
+                                    materia = materia_key
+                                    print(f"Encontro a matéria: {materia}")
+                                    emoji = materia_emojis[materia]
+                                    break
+                        else:
+                            emoji = materia_emojis[infos[2]]
+                            materia = infos[2]
+
+                        parte_mensagem_enviara.append(f'{infos[3]} - {materia} {emoji} ')
 
                         mensagem.extend(parte_mensagem_enviara)
                         if infos[4] != 'Vazio':
@@ -533,8 +546,19 @@ def tarefa(client: NewClient):
                             primeira_barra = True
                         if not f"📅 *{meses[int(data_atual.strftime('%m'))-1]}*" in mensagem:
                             mensagem.append(f"📅 *{meses[int(data_atual.strftime('%m'))-1]}*")
+
+                        if materia_emojis.get(infos[2]) is None:
+                            for materia_key in MATERIAS.keys():
+                                if infos[2].lower() in MATERIAS[materia_key]:
+                                    materia = materia_key
+                                    print(f"Encontro a matéria: {materia}")
+                                    emoji = materia_emojis[materia]
+                                    break
+                        else:
+                            emoji = materia_emojis[infos[2]]
+                            materia = infos[2]
                         
-                        parte_mensagem_enviara.append(f'{materia_emojis[infos[2]]} {data_atual.strftime("%d/%m")} {infos[3]} - {infos[2]}')
+                        parte_mensagem_enviara.append(f'{emoji} {data_atual.strftime("%d/%m")} {infos[3]} - {materia}')
 
                         mensagem.extend(parte_mensagem_enviara)
                         if infos[4] != 'Vazio':

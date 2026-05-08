@@ -86,7 +86,8 @@ def on_message(client: NewClient, event: MessageEv):
     if datetime.now().strftime("%d/%m/%Y") == enviar and numero == amigo_jid:
         texto = texto.strip()
         lista_strgs = texto.split(",")
-        if lista_strgs[0] in ["s","si","sm","sim","yes","y", "pode", "sin"]:
+        print(f"lista_strngs: {lista_strgs}")
+        if lista_strgs[0].lower() in ["s","si","sm","sim","yes","y", "pode", "sin"]:
             client.send_message(remetente_jid, "Cronocrama Sendo enviado...")
             comunidade = build_jid(os.getenv("GRUPO_COMUNIDADE_TESTE"), "g.us")
 
@@ -96,7 +97,7 @@ def on_message(client: NewClient, event: MessageEv):
 
             if len(lista_strgs) > 1:
                 mensagem += "\n━━━━━━━━━━━━━━━━━\n"
-                mensagem += ",".join(lista_strgs[1:])
+                mensagem += ", ".join(lista_strgs[1:]).strip()
 
             time.sleep(2)
             client.send_message(comunidade, mensagem)
@@ -108,7 +109,7 @@ def on_message(client: NewClient, event: MessageEv):
 
         with open("confirmacao.txt", "w", encoding="utf-8") as desconfirmacao:
             desconfirmacao.write("Sei lá, só precisava tirar o que tava")
-        with open("cronograma.txt", "r", encoding="utf-8") as descronograma:
+        with open("cronograma.txt", "w", encoding="utf-8") as descronograma:
             descronograma.write("Sei lá, só precisava tirar o que tava")
         desconfirmacao.close()
         descronograma.close()

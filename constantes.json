@@ -1,12 +1,12 @@
 {
-    "Administração de Redes": [
+    "ADM Redes": [
         "administração de redes", "administraçao de redes", "administracao de redes", 
-        "adm redes", "ptbadre", "adre"
+        "adm redes", "ptbadre", "adre", "adm redes"
     ],
-    "Empreendedorismo": [
+    "ADM": [
         "administração e empreendedorismo em informática", "administraçao e empreendedorismo em informática", 
         "administracao e empreendedorismo em informática", "administracao e empreendedorismo em informatica", 
-        "administração e empreendedorismo em informatica", "empreendedorismo", "empreendedor", "ptbadei", "adei"
+        "administração e empreendedorismo em informatica", "empreendedorismo", "empreendedor", "ptbadei", "adei", "adm"
     ],
     "Biologia": [
         "biologia", "bio", "ptbblg", "ptbblg2", "blg", "blg2"
@@ -33,11 +33,11 @@
     "Matemática": [
         "matemática", "matematica", "ptbmtm", "ptbmtm3", "mtm", "mtm3"
     ],
-    "Programação para Dispositivo Móveis": [
+    "Programação Mobile": [
         "programação para dispositivo móveis", "programaçao para dispositivo móveis", 
         "programacao para dispositivo móveis", "programacao para dispositivo moveis", 
         "programação para dispositivo moveis", "programação", "programaçao", 
-        "programacao", "ptbprdm", "prdm", "godot"
+        "programacao", "ptbprdm", "prdm", "godot", "programacao mobile", "programação mobile"
     ],
     "Projeto Integrador": [
         "projeto integrador", "projeto", "integrador", "ptbprin", "prin", "pji", "pjin"
@@ -45,8 +45,8 @@
     "Química": [
         "química", "quimica", "ptbqmc", "ptbqmc2", "qmc", "qmc2"
     ],
-    "Redes sem fio e Celulares": [
-        "redes sem fio e celulares", "redes sem", "redes e celulares", "ptbrsfc", "rsfc"
+    "Redes Mobile": [
+        "redes sem fio e celulares", "redes sem", "redes e celulares", "ptbrsfc", "rsfc", "Redes Mobile"
     ],
     "Sociologia": [
         "sociologia", "socio", "ptbsoc", "ptbsoc2", "soc", "soc2"
