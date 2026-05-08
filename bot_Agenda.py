@@ -181,12 +181,17 @@ def on_message(client: NewClient, event: MessageEv):
         elif resultado[0] == 'status' or resultado[0] == 'hoje' or resultado[0] == 'amanha' or resultado[0] == 'amanhã' or resultado[0] == 'semana' or resultado[0] == 'listar' or resultado[0] == 'proximo_mes':
             if resultado[1]: # Resultado[1] = (ID, Data, Matéria, Tipo, Descrição)
 
+                meses = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']
+                mes_atual = ""
                 data_antiga = ''
                 for infos in resultado[1]:
                     parte_mensagem_enviara = []
                     print(f'Informação sendo colocado na resposta: {infos}')
 
                     data = infos[1]
+                    if mes_atual != meses[int(data[5:7])-1] and resultado[0] == 'proximo_mes': # 2026-05-08
+                        mes_atual = meses[int(data[5:7])-1]
+                        resposta.append(f"📅 *{mes_atual}*")
                     if data_antiga != data:
                         data_antiga = data
                         data_formatada = f'{data[-2:]}/{data[5:7]}'

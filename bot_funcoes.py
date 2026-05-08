@@ -414,6 +414,7 @@ def editar_bd(texto:str):
     print('\033[31mRESOLVA\033[0m')
 
 def comando_deletar(id:str) -> int:
+    print("[Função comando_deletar]")
     try:
         conexao = sqlite3.connect("cronograma.db")
         curso = conexao.cursor()
@@ -430,24 +431,27 @@ def comando_deletar(id:str) -> int:
     finally:
         curso.close()
         conexao.close()
-    
+    print("[Acabou função comando_deletar]")
     return deletados
 
 def eventos_proximo_mes(ano_mes:str):
+    print("[Função eventos_proximo_mes]")
     try:
         conexao = sqlite3.connect('cronograma.db')
+        print("Conexão feita")
         curso = conexao.cursor()
         curso.execute(
-            '''SELECT * FROM eventos WHERE data_evento LIKE ?''', (ano_mes,)
+            '''SELECT * FROM eventos WHERE data_evento >= ?''', (ano_mes,)
         )
         eventos = curso.fetchall()
+        print(f"SQL retornou: {eventos}")
     except:
         print("Falha ao buscar proximo mês")
         eventos = None
     finally:
         curso.close()
         conexao.close()
-
+    print("[Acabou função eventos_proximo_mes]")
     return eventos
 
 def tarefa(client: NewClient):
