@@ -287,6 +287,14 @@ def buscar_eventos(quando:str='') -> list[tuple]:
                 WHERE data_evento = ?
                 ORDER BY data_evento ASC, materia ASC;''', (amanha,)
             )
+        elif quando == "tarefa":
+            dia = date.today() + timedelta(days=1)
+            print(f"Pegou a viriavel dia: {dia}")
+            curso.execute(
+                '''SELECT * FROM eventos
+                WHERE data_evento >= ?
+                ORDER BY data_evento ASC, materia ASC;''', (dia,)
+            )
         
         resultados = curso.fetchall()
         print(f"Eventos pegos: {resultados}")
@@ -459,28 +467,13 @@ def tarefa(client: NewClient):
         agora = datetime.now()
         dia_da_semana = agora.weekday()  # Segunda=0, Sexta=4
         hora_atual = agora.strftime("%H:%M")
-        if dia_da_semana == 4 and hora_atual == "15:30":
+        if dia_da_semana == 4 and hora_atual == "14:05":
             amigo = build_jid(os.getenv("AMIGO"))
             with open('emojis_materias.json', 'r', encoding='utf-8') as f:
                 materia_emojis = json.load(f)
 
-            hoje = datetime.now()
-            hoje_formatado = hoje.strftime("%Y-%m-%d")
-            dia_semana = hoje.weekday()
-
-            # Alvo é Sexta (4). Cálculo: (Alvo - Hoje) % 7
-            dias_faltando = (4 - dia_semana) % 7
-
-            print(f'Falta {dias_faltando} para a Sexta-Feira')
-
-            # Se hoje for sexta e você quiser a da SEMANA QUE VEM, force 7 dias:
-            if dias_faltando == 0: 
-                dias_faltando = 7
-
-            sexta = hoje + timedelta(days=dias_faltando)
-            sexta_formatada = sexta.strftime("%Y-%m-%d")
-
-            eventos_pegos = buscar_eventos()
+            eventos_pegos = buscar_eventos("tarefa")
+            domingo = datetime.now() + timedelta(days=2)
 
             mensagem = []
             meses = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']
@@ -489,9 +482,10 @@ def tarefa(client: NewClient):
                 mensagem.append('📅 CRONOGRAMA DA SEMANA')
                 mensagem.append('━━━━━━━━━━━━━━━━━')
 
-                data_antiga = datetime.now()
+                data_antiga = datetime.now() + timedelta(days=1)
                 primeira = True
-                proxima_semana = sexta + timedelta(days=1)
+                sabado = domingo + timedelta(days=6)
+                proxima_semana = sabado + timedelta(days=1)
                 fim_proxima = proxima_semana + timedelta(days=7)
                 primeira_barra = False
                 for infos in eventos_pegos:
@@ -500,9 +494,9 @@ def tarefa(client: NewClient):
 
                     data_atual = datetime.strptime(infos[1], "%Y-%m-%d")
 
-                    if data_atual.date() <= sexta.date():
-                        if not f'📍 *ESSA SEMANA* ({hoje.strftime("%d/%m")} - {sexta.strftime("%d/%m")}):' in mensagem:
-                            mensagem.append(f'📍 *ESSA SEMANA* ({hoje.strftime("%d/%m")} - {sexta.strftime("%d/%m")}):')
+                    if data_atual.date() <= sabado.date():
+                        if not f'📍 *ESSA SEMANA* ({domingo.strftime("%d/%m")} - {sabado.strftime("%d/%m")}):' in mensagem:
+                            mensagem.append(f'📍 *ESSA SEMANA* ({domingo.strftime("%d/%m")} - {sabado.strftime("%d/%m")}):')
                         
                         if primeira or data_atual.date() != data_antiga.date():
                             primeira = False
