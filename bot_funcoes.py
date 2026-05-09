@@ -85,10 +85,22 @@ def decidir_destino(texto:str, numero_celular:str) -> tuple[str, any]:
             if len(lista_strs) > 1:
                 print(f"Tem outro comando: {lista_strs[1]}")
 
-                if lista_strs[1] in comandos:
+                if lista_strs[1] in ('agendar', 'status', 'hoje', 'amanha', 'amanhã', 'semana', 'editar', 'tutorial', 'listar','deletar',):
                     print("Acho o segundo comando")
                     print("[Acabou a função decidir_destino]")
                     return (comando, lista_strs[1],)
+                
+                elif " ".join(lista_strs[1:]) == "proximo mes" or " ".join(lista_strs[1:]) == "próximo mes" or " ".join(lista_strs[1:]) == "próximo mês" or " ".join(lista_strs[1:]) == "proximo mês":
+                    print("Achei o segundo comando")
+                    print(f"O segundo comando é{'_'.join(lista_strs[1:])}")
+                    print("[Acabou a função decidir_destino]")
+                    return (comando, "proximo_mes",)
+                
+                elif " ".join(lista_strs[1:]) == "mês que vem" or " ".join(lista_strs[1:]) == "mes que vem":
+                    print("Achei o segundo comando")
+                    print(f"O segundo comando é{'_'.join(lista_strs[1:])}")
+                    print("[Acabou a função decidir_destino]")
+                    return (comando, "mes_que_vem",)
                 
                 print('segundo comando não encontrado')
                 print("[Acabou a função decidir_destino]")
@@ -142,24 +154,24 @@ def decidir_destino(texto:str, numero_celular:str) -> tuple[str, any]:
             return (comando, qnt_deletado,)
         
     elif (qnt_lista_strs:= len(lista_strs)) in (2,3,):
-        passa = False
+        passa_mes = False
         if qnt_lista_strs == 2:
             if (lista_strs[0] == "proximo" or lista_strs[0] == "próximo") and (lista_strs[1] == "mes" or lista_strs[1] == "mês"):
                 print("Passou em 2 elementos")
-                passa = True
+                passa_mes = True
         else:
             if (lista_strs[0] == "mes" or lista_strs[0] == "mês") and lista_strs[1] == "que" and lista_strs[2] == "vem":
                 print("Passou em 3 elementos")
-                passa = True
+                passa_mes = True
         
-        if passa:
+        if passa_mes:
             comando = 'proximo_mes'
             hoje = datetime.now()
             proximo_mes = hoje + relativedelta(months=1)
             data = proximo_mes.strftime("%Y-%m")
             eventos= eventos_proximo_mes(data)
             return (comando, eventos,)
-        
+
     print("[Acabou a função decidir_destino]")
     return ('Najudar', None)
 
@@ -311,7 +323,110 @@ def editar_bd(texto:str):
     infos = [item.strip() for item in texto[6:].split(',')]
     print(f'texto separado: {infos}')
 
-    if len(infos) > 3 and infos[1] not in ('descrição', 'descriçao', 'descricão', 'descricao',):
+    if len(infos) > 1:
+        try:
+            data = datetime.strptime(infos[0], "%d/%m").replace(year=datetime.now().year)
+            editar_por_data = True
+        except:
+            editar_por_data = False
+    if editar_por_data:
+
+        if len(infos) > 4 and infos[2].lower() not in ('descrição', 'descriçao', 'descricão', 'descricao',):
+            print('Muitos argumentos')
+            print('[Acabou função editar_bd]')
+            return 'muitos_agrs'
+        elif len(infos) == 4 and (not infos[1].isdecimal() or infos[1] not in ('descrição', 'descriçao', 'descricão', 'descricao',)):
+            print('Muitos argumentos')
+            print('[Acabou função editar_bd]')
+            return 'muitos_agrs'
+        elif len(infos) == 3 and not infos[1].isdecimal():
+            print('Poucos argumentos')
+            print('[Acabou função editar_bd]')
+            return 'falta_agrs'
+        elif len(infos) < 3:
+            print('Poucos argumentos')
+            print('[Acabou função editar_bd]')
+            return 'falta_agrs'
+
+        conexao = sqlite3.connect("cronograma.db")
+        curso = conexao.cursor()
+        curso.execute(
+                '''SELECT * FROM eventos
+                WHERE data_evento = ?
+                ORDER BY materia ASC;''', (data.strftime("%Y-%m-%d"),)
+            )
+        resultados = curso.fetchall()
+
+        if len(resultados) == 1 and not infos[1].isdecimal():
+            if len(infos) > 3 and infos[1] not in ('descrição', 'descriçao', 'descricão', 'descricao',):
+                print('Muitos argumentos')
+                print('[Acabou função editar_bd]')
+                return 'muitos_agrs'
+            
+            if not infos[1] in ('materia','matéria','tipo','descrição', 'descriçao', 'descricão', 'descricao',):
+                return "campo_alvo_invalido"
+            
+            if infos[1] in ('materia','matéria'):
+                campo_alvo = "materia"
+            elif infos[1] in ('descrição', 'descriçao', 'descricão', 'descricao',):
+                campo_alvo = "descricao"
+            else:
+                campo_alvo = "tipo"
+            curso.execute(
+                '''UPDATE eventos SET ? = ?
+                WHERE id = ?
+                ''', (campo_alvo, ", ".join(infos[2:]), resultados[0][0],)
+            )
+            conexao.commit()
+            curso.close()
+            conexao.close()
+            return f'sucesso_{campo_alvo}'
+        
+        elif len(resultados) > 1 and not infos[1].isdecimal():
+            return ["faltar_indice", resultados]
+        
+        elif len(resultados) > 1 and infos[1].isdecimal():
+            if not infos[2] in ('materia','matéria','tipo','descrição', 'descriçao', 'descricão', 'descricao',):
+                return "campo_alvo_invalido"
+            
+            if infos[2] in ('materia','matéria'):
+                campo_alvo = "materia"
+            elif infos[2] in ('descrição', 'descriçao', 'descricão', 'descricao',):
+                campo_alvo = "descricao"
+            else:
+                campo_alvo = "tipo"
+        
+            curso.execute(
+                '''UPDATE eventos SET ? = ? 
+                WHERE id = ?''', (campo_alvo, ", ".join(infos[3:]), resultados[int(infos[1])-1])
+            )
+            conexao.commit()
+            curso.close()
+            conexao.close()
+            return f"sucesso_{campo_alvo}"
+        elif len(resultados) == 0:
+            return "sem_eventos"
+        elif len(resultados) == 1 and infos[1].isdecimal():
+            if not infos[2] in ('materia','matéria','tipo','descrição', 'descriçao', 'descricão', 'descricao',):
+                return 'campo_invalido'
+            
+            if infos[2] in ('materia','matéria'):
+                campo_alvo = "materia"
+            elif infos[2] in ('descrição', 'descriçao', 'descricão', 'descricao',):
+                campo_alvo = "descricao"
+            else:
+                campo_alvo = "tipo"
+            curso.execute(
+                '''UPDATE eventos SET ? = ?
+                WHERE id = ?
+                ''',(campo_alvo, ", ".join(infos[2:]), resultados[0][0],)
+            )
+            conexao.commit()
+            curso.close()
+            conexao.close()
+            return f'sucesso_{campo_alvo}'
+
+    if len(infos) > 3 and infos[1].lower() not in ('descrição', 'descriçao', 'descricão', 'descricao',):
         print('Muitos argumentos')
         print('[Acabou função editar_bd]')
         return 'muitos_agrs'
@@ -338,10 +453,10 @@ def editar_bd(texto:str):
         print('[Acabou função editar_bd]')
         return 'id_invalido'
 
-    if not campo_alvo in ('data_evento', 'data', 'evento_data','evento','materia','matéria','tipo','descrição', 'descriçao', 'descricão', 'descricao',):
+    if not campo_alvo.lower() in ('data_evento', 'data', 'evento_data','evento','materia','matéria','tipo','descrição', 'descriçao', 'descricão', 'descricao',):
         return 'campo_invalido'
 
-    if campo_alvo in ('data_evento', 'data', 'evento_data',):
+    if campo_alvo.lower() in ('data_evento', 'data', 'evento_data',):
         formatos = ("%d/%m/%y", "%d/%m/%Y", "%d/%m")
     
         try:
@@ -370,14 +485,14 @@ def editar_bd(texto:str):
         print('[Acabou função editar_bd]')
         return 'sucesso_data'
     
-    if campo_alvo in ('materia','matéria',):
+    if campo_alvo.lower() in ('materia','matéria',):
         with open('constantes.json', 'r', encoding='utf-8') as f:
             MATERIAS:dict = json.load(f)
         print('Matérias pegas')
         
         materia_pega = False
         for materia_corretor in MATERIAS.keys():
-            if novo_valor in MATERIAS[materia_corretor]:
+            if novo_valor.lower() in MATERIAS[materia_corretor]:
                 materia = materia_corretor
                 materia_pega = True
                 print(f'A matéria é {materia}')
@@ -397,7 +512,7 @@ def editar_bd(texto:str):
         print('[Acabou função editar_bd]')
         return 'sucesso_materia'
     
-    if campo_alvo in ('tipo',):
+    if campo_alvo.lower() in ('tipo',):
         curso.execute(
             '''UPDATE eventos SET tipo = ?
             WHERE id = ?''', (novo_valor.title(), id_evento,))
@@ -407,7 +522,7 @@ def editar_bd(texto:str):
         print('[Acabou função editar_bd]')
         return 'sucesso_tipo'
     
-    if campo_alvo in ('descrição', 'descriçao', 'descricão', 'descricao',):
+    if campo_alvo.lower() in ('descrição', 'descriçao', 'descricão', 'descricao',):
         print('Entrou no caso de Descrição')
         novo_valor = ', '.join(infos[2:])
         curso.execute(
@@ -467,7 +582,8 @@ def tarefa(client: NewClient):
         agora = datetime.now()
         dia_da_semana = agora.weekday()  # Segunda=0, Sexta=4
         hora_atual = agora.strftime("%H:%M")
-        if dia_da_semana == 4 and hora_atual == "14:30":
+        confirmacao_envio = open("confirmacao.txt", "r")
+        if ((dia_da_semana == 4 and hora_atual == "11:30") or (dia_da_semana == 5 and hora_atual == "13:00") or (dia_da_semana == 6 and hora_atual == "13:00")) and not "enviado" in confirmacao_envio.read().lower():
             amigo = build_jid(os.getenv("AMIGO"))
             with open('emojis_materias.json', 'r', encoding='utf-8') as f:
                 materia_emojis:dict = json.load(f)
@@ -577,7 +693,11 @@ def tarefa(client: NewClient):
                 confirmacao.write(f"{datetime.now().strftime('%d/%m/%Y')}")
             with open("cronograma.txt", "w", encoding="utf-8") as cronocrama:
                 cronocrama.write(mensagem_final)
+
+            confirmacao.close()
+            cronocrama.close()
             sleep(120)
+        confirmacao_envio.close()
         sleep(20)
 
 def exclucao_atutomatica():

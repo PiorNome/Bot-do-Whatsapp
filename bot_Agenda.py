@@ -83,6 +83,9 @@ def on_message(client: NewClient, event: MessageEv):
     amigo_jid = os.getenv("AMIGO_JID")
     print(f"Número: {numero}\nAmigo: {amigo_jid}")
     print(f"Data TXT: {enviar}\nData Hoje: {datetime.now().strftime('%d/%m/%Y')}")
+
+    agora = datetime.now()
+    dia_semana = agora.weekday()
     if datetime.now().strftime("%d/%m/%Y") == enviar and numero == amigo_jid:
         texto = texto.strip()
         lista_strgs = texto.split(",")
@@ -104,8 +107,16 @@ def on_message(client: NewClient, event: MessageEv):
             time.sleep(1)
 
             client.send_message(remetente_jid, "Cronograma Enviado")
+
+            confirmacao = open("confirmacao.txt", "w")
+            confirmacao.write("enviado")
+            confirmacao.close()
+
         else:
-            client.send_message(remetente_jid, "Então o envio terá que ser manual")
+            if dia_semana in (4,5,):
+                client.send_message(remetente_jid, "Vou perguntar denovo amanhã")
+            else:
+                client.send_message(remetente_jid, "Então o envio terá que ser manual")
 
         with open("confirmacao.txt", "w", encoding="utf-8") as desconfirmacao:
             desconfirmacao.write("Sei lá, só precisava tirar o que tava")
@@ -171,6 +182,7 @@ def on_message(client: NewClient, event: MessageEv):
                 resposta.append("   agendar [data] , [tipo] , [materia] , [descrição(opcinal)]")
                 resposta.append("   editar [id] , [o campo que você que mudar] , [o valor que você quer]")
                 resposta.append("   listar")
+                resposta.append("   deletar [id]")
 
             resposta.append("   status")
             resposta.append("   hoje")
@@ -245,6 +257,14 @@ def on_message(client: NewClient, event: MessageEv):
                 elif resultado[1] == 'campo_invalido':
                     resposta.append('❌O campo que você queria mudar é invalido')
                     resposta.append('Os campos aceitos são: data, tipo ou matéria')
+                elif type(resultado[1]) == list and resultado[1][0] == "indice_invalido":
+                    resposta.append("O Nº que vc escolheu é maior ou menor que 1")
+                    resposta.append("Por favor, escolha um Nº entre 1 e a quantidade de eventos no dia")
+                    resposta.append("")
+                    indice = 1
+                    for evento in resultado[1][1]:
+                        resposta.append(f"{indice} - {evento[3]} - {evento[2]}")
+                        indice += 1
             
             else: # Aqui vai ficar os casos de muitos argumentou e os poucos argumentos
                 if resultado[1] == 'muitos_agrs':
@@ -253,6 +273,16 @@ def on_message(client: NewClient, event: MessageEv):
                 elif resultado[1] == 'falta_agrs':
                     resposta.append('❌Você colocou menos informações que deveria')
                     resposta.append('coloque dessa forma "editar [ID do evento] , [campo que você quer alterar] , [novo valor que você quer]"')
+                elif resultado[1] == "sem_eventos":
+                    resposta.append('Não a eventos no dia escolhido')
+                elif type(resultado[1]) == list and resultado[1][0] == "faltar_indice":
+                    resposta.append("Existe mais de um evento nesse dia")
+                    resposta.append("adicione um um Nº")
+                    resposta.append("")
+                    indice = 1
+                    for evento in resultado[1][1]:
+                        resposta.append(f"{indice} - {evento[3]} - {evento[2]}")
+                        indice += 1
         
         elif resultado[0] == 'tutorial':
             # Primeiro vai verivicar se a pessoa pediu só "tutorial"
@@ -268,6 +298,7 @@ def on_message(client: NewClient, event: MessageEv):
                     resposta.append("   editar [id] , [o campo que você que mudar] , [o valor que você quer]")
                     resposta.append("   deletar [id do evento]")
                     resposta.append("   listar")
+                    resposta.append("   deletar [id]")
                 
                 resposta.append("   status")
                 resposta.append("   hoje")
@@ -290,6 +321,7 @@ def on_message(client: NewClient, event: MessageEv):
                     resposta.append("   editar [id] , [o campo que você que mudar] , [o valor que você quer]")
                     resposta.append("   deletar [id do evento]")
                     resposta.append("   listar")
+                    resposta.append("   deletar")
 
                 resposta.append("   status")
                 resposta.append("   hoje")
@@ -302,7 +334,7 @@ def on_message(client: NewClient, event: MessageEv):
                 resposta.append("Dica:")
                 resposta.append("   Se você usar \"tutorial [comando]\", você irar ver um tutorial mais completo do comando especificado")
 
-            elif resultado[1] in ('agendar', 'status', 'hoje', 'amanha', 'amanhã', 'semana', 'editar', 'tutorial', 'listar','deletar',):
+            elif resultado[1] in ('agendar', 'status', 'hoje', 'amanha', 'amanhã', 'semana', 'editar', 'tutorial', 'listar','deletar', "mes_que_vem", "proximo_mes",):
                 if resultado[1] == 'agendar':
                     resposta.append("Com o comando *agendar*, você registra uma nova atividade no cronograma.")
                     resposta.append("Para usar o comando *agendar* você precisa ser *ADMIN*")
@@ -388,6 +420,20 @@ def on_message(client: NewClient, event: MessageEv):
                     resposta.append("―――――――――――――――――――――――")
                     resposta.append("Dica:")
                     resposta.append("   Use o comando \"listar\" para saber o id dos eventos")
+                
+                elif resultado[1] == 'mes_que_vem':
+                    resposta.append("Com o comando *mes que vem* você pode ver tudo que vai ter nos proximos meses")
+                    resposta.append("*Como usar?*")
+                    resposta.append("   mes que vem")
+                    resposta.append("―――――――――――――――――――――――")
+                    resposta.append("obs: Para usar você realmente só escreve \"mes que vem\"")
+                
+                elif resultado[1] == 'proximo_mes':
+                    resposta.append("Com o comando *proximo mes* você pode ver tudo que vai ter nos proximos meses")
+                    resposta.append("*Como usar?*")
+                    resposta.append("   proximo mes")
+                    resposta.append("―――――――――――――――――――――――")
+                    resposta.append("obs: Para usar você realmente só escreve \"proximo mes\"")
         
         elif resultado[0] == 'deletar':
             if resultado[1] == 'sem_permissão':
