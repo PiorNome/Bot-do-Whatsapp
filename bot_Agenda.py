@@ -10,7 +10,7 @@ representates = os.getenv('REPRESENTATES')
 
 hora_inicio = time.time()
 
-client = NewClient("teste.db")
+client = NewClient("whatsapp.db")
 
 with open('emojis_materias.json', 'r', encoding='utf-8') as f:
     materia_emojis = json.load(f)

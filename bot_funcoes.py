@@ -330,63 +330,87 @@ def editar_bd(texto:str):
         except:
             editar_por_data = False
     if editar_por_data:
-
+        print("Entrou no editar por data")
+        print(f"O segundo elemento é {infos[1]}")
         if len(infos) > 4 and infos[2].lower() not in ('descrição', 'descriçao', 'descricão', 'descricao',):
-            print('Muitos argumentos')
+            print("Mais de 4 elementos na lista")
+            print('Muitos argumentos e não é descrição')
             print('[Acabou função editar_bd]')
             return 'muitos_agrs'
-        elif len(infos) == 4 and (not infos[1].isdecimal() or infos[1] not in ('descrição', 'descriçao', 'descricão', 'descricao',)):
-            print('Muitos argumentos')
+        elif len(infos) == 4 and ((not infos[1].isdecimal()) and (infos[1] not in ('descrição', 'descriçao', 'descricão', 'descricao',))):
+            print("4 elementos na lista")
+            print('Muitos argumentos 2º elemento não é um Nº ou não é o tipo descrição')
             print('[Acabou função editar_bd]')
             return 'muitos_agrs'
-        elif len(infos) == 3 and not infos[1].isdecimal():
+        elif len(infos) == 3 and infos[1].isdecimal():
+            print("3 elementos na lista")
             print('Poucos argumentos')
             print('[Acabou função editar_bd]')
             return 'falta_agrs'
         elif len(infos) < 3:
+            print("menos de 3 elementos na lista")
             print('Poucos argumentos')
             print('[Acabou função editar_bd]')
             return 'falta_agrs'
 
         conexao = sqlite3.connect("cronograma.db")
         curso = conexao.cursor()
+        print("Conexão com sql feita")
         curso.execute(
                 '''SELECT * FROM eventos
                 WHERE data_evento = ?
                 ORDER BY materia ASC;''', (data.strftime("%Y-%m-%d"),)
             )
+        print("Comando 'execute' feito")
         resultados = curso.fetchall()
+        print(f"Resultados pegos: {resultados}")
 
         if len(resultados) == 1 and not infos[1].isdecimal():
+            print("Só um resultado e o segundo argumente não é decimal")
             if len(infos) > 3 and infos[1] not in ('descrição', 'descriçao', 'descricão', 'descricao',):
+                print("A lista infos tem mais de três elementos e o tipo não é descrição")
                 print('Muitos argumentos')
                 print('[Acabou função editar_bd]')
                 return 'muitos_agrs'
             
             if not infos[1] in ('materia','matéria','tipo','descrição', 'descriçao', 'descricão', 'descricao',):
+                print("Tipo invalido")
+                print('[Acabou função editar_bd]')
                 return "campo_alvo_invalido"
             
             if infos[1] in ('materia','matéria'):
+                print("tipo = materia")
                 campo_alvo = "materia"
             elif infos[1] in ('descrição', 'descriçao', 'descricão', 'descricao',):
+                print("tipo = descrição")
                 campo_alvo = "descricao"
             else:
+                print("tipo = tipo")
                 campo_alvo = "tipo"
+            
+            print(f"ID do evnto pego: {resultados[0][0]}")
             curso.execute(
-                '''UPDATE eventos SET ? = ?
+                f'''UPDATE eventos SET {campo_alvo} = ?
                 WHERE id = ?
-                ''', (campo_alvo, ", ".join(infos[2:]), resultados[0][0],)
+                ''', (", ".join(infos[2:]), resultados[0][0],)
             )
+            print("Mudança feita")
             conexao.commit()
             curso.close()
             conexao.close()
+
+            print('[Acabou função editar_bd]')
             return f'sucesso_{campo_alvo}'
         
         elif len(resultados) > 1 and not infos[1].isdecimal():
+            print("Existe mais de um evento na data escolhida, mas não tem o indice")
+            print('[Acabou função editar_bd]')
             return ["faltar_indice", resultados]
         
         elif len(resultados) > 1 and infos[1].isdecimal():
             if not infos[2] in ('materia','matéria','tipo','descrição', 'descriçao', 'descricão', 'descricao',):
+                print("Tipo invalido")
+                print('[Acabou função editar_bd]')
                 return "campo_alvo_invalido"
             
             if infos[2] in ('materia','matéria'):
@@ -397,17 +421,22 @@ def editar_bd(texto:str):
                 campo_alvo = "tipo"
         
             curso.execute(
-                '''UPDATE eventos SET ? = ? 
-                WHERE id = ?''', (campo_alvo, ", ".join(infos[3:]), resultados[int(infos[1])-1])
+                f'''UPDATE eventos SET {campo_alvo} = ? 
+                WHERE id = ?''', (", ".join(infos[3:]), resultados[int(infos[1])-1])
             )
             conexao.commit()
             curso.close()
             conexao.close()
+            print('[Acabou função editar_bd]')
             return f"sucesso_{campo_alvo}"
+        
         elif len(resultados) == 0:
+            print('[Acabou função editar_bd]')
             return "sem_eventos"
+        
         elif len(resultados) == 1 and infos[1].isdecimal():
             if not infos[2] in ('materia','matéria','tipo','descrição', 'descriçao', 'descricão', 'descricao',):
+                print('[Acabou função editar_bd]')
                 return 'campo_invalido'
             
             if infos[2] in ('materia','matéria'):
@@ -416,6 +445,7 @@ def editar_bd(texto:str):
                 campo_alvo = "descricao"
             else:
                 campo_alvo = "tipo"
+
             curso.execute(
                 '''UPDATE eventos SET ? = ?
                 WHERE id = ?
@@ -424,6 +454,8 @@ def editar_bd(texto:str):
             conexao.commit()
             curso.close()
             conexao.close()
+
+            print('[Acabou função editar_bd]')
             return f'sucesso_{campo_alvo}'
 
     if len(infos) > 3 and infos[1].lower() not in ('descrição', 'descriçao', 'descricão', 'descricao',):
