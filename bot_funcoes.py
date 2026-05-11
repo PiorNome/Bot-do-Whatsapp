@@ -9,7 +9,7 @@ load_dotenv()
 def decidir_destino(texto:str, numero_celular:str) -> tuple[str, any]:
     print(f"[Função: decidir_destino]")
     print(f"Recebeu {texto}")
-    comandos = ['agendar', 'status', 'hoje', 'amanha', 'amanhã', 'tutorial', 'editar', 'semana', 'listar', 'deletar']
+    comandos = ['agendar', 'status', 'hoje', 'amanha', 'amanhã', 'tutorial', 'editar', 'semana', 'listar', 'deletar', 'mês', 'mes']
     lista_strs = texto.lower().split()
     numeros = os.getenv('REPRESENTATES')
     REPRESENTATES = numeros.split(' , ')
@@ -55,7 +55,7 @@ def decidir_destino(texto:str, numero_celular:str) -> tuple[str, any]:
             print("[Acabou a função decidir_destino]")
             return (comando,tuple(retorna),)
         
-        elif lista_strs[0] == 'status' or lista_strs[0] == 'hoje' or lista_strs[0] == 'amanha' or lista_strs[0] == 'amanhã' or lista_strs[0] == 'listar':
+        elif (lista_strs[0] == 'status' or lista_strs[0] == 'hoje' or lista_strs[0] == 'amanha' or lista_strs[0] == 'amanhã' or lista_strs[0] == 'listar') and len(lista_strs) == 1:
             comando = lista_strs[0]
             print(f"O comando usado para ver os eventos foi: \"{comando}\"")
             print("Buscando eventos")
@@ -109,7 +109,19 @@ def decidir_destino(texto:str, numero_celular:str) -> tuple[str, any]:
             print("[Acabou a função decidir_destino]")
             return (comando, None,)
         
-        elif lista_strs[0] == 'semana':
+        elif (lista_strs[0] == "mes" or lista_strs[0] == "mês") and len(lista_strs) == 1:
+            comando = "mes"
+
+            hoje = datetime.now()
+
+            proximo_mes = (hoje + relativedelta(months=1)).replace(day=1)
+            ultimo_dia_mes = proximo_mes - timedelta(days=1)
+            
+            eventos_pegos = buscar_evento_semana(hoje.strftime("%Y-%m-%d"), ultimo_dia_mes.strftime("%Y-%m-%d"))
+
+            return (comando, eventos_pegos,)
+        
+        elif (lista_strs[0] == 'semana') and len(lista_strs) == 1:
             # uma colinha para eu saber o indice
             "Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado", "Domingo"
             #       0              1               2               3              4            5         6
@@ -153,7 +165,7 @@ def decidir_destino(texto:str, numero_celular:str) -> tuple[str, any]:
             
             return (comando, qnt_deletado,)
         
-    elif (qnt_lista_strs:= len(lista_strs)) in (2,3,):
+    if (qnt_lista_strs:= len(lista_strs)) in (2,3,):
         passa_mes = False
         if qnt_lista_strs == 2:
             if (lista_strs[0] == "proximo" or lista_strs[0] == "próximo") and (lista_strs[1] == "mes" or lista_strs[1] == "mês"):
@@ -167,10 +179,35 @@ def decidir_destino(texto:str, numero_celular:str) -> tuple[str, any]:
         if passa_mes:
             comando = 'proximo_mes'
             hoje = datetime.now()
-            proximo_mes = hoje + relativedelta(months=1)
-            data = proximo_mes.strftime("%Y-%m")
+            proximo_mes = (hoje + relativedelta(months=1)).replace(day=1)
+            data = proximo_mes.strftime("%Y-%m-%d")
             eventos= eventos_proximo_mes(data)
-            return (comando, eventos,)
+            return (comando, eventos,)       
+
+    print(f"Tamanho da lista: {len(lista_strs)}")
+    print(f"Item 0: {repr(lista_strs[0])} - Está no grupo? {lista_strs[0] in ('próximo','proximo','próxima','proxima')}")
+    print(f"Item 1: {repr(lista_strs[1])} - É igual a 'semana'? {lista_strs[1] == 'semana'}")
+
+    if len(lista_strs) >= 2:
+        print("Entrou no elif com sucesso!")
+        if lista_strs[0] in ("próximo","proximo","próxima","proxima",) and lista_strs[1] == "semana":
+            print("entou como procima semana")
+            comando = "proxima_semana"
+            domingo = datetime.now()
+            for dias in range(0,10):
+                domingo = domingo + timedelta(days=1)
+                if domingo.weekday() == 6:
+                    break
+            
+            domingo_formatado = domingo.strftime("%Y-%m-%d")
+            
+            sabado = domingo + timedelta(days=6)
+            sabado_formatado = sabado.strftime("%Y-%m-%d")
+
+            eventos_pegos = buscar_evento_semana(domingo_formatado, sabado_formatado)
+
+            print('[Acabou a função decidir_destino]')
+            return (comando, eventos_pegos)
 
     print("[Acabou a função decidir_destino]")
     return ('Najudar', None)
@@ -246,7 +283,7 @@ def adicionar_bd(texto:str) -> tuple[int]:
     print("[Acabou a função adicionar_bd]")
     return (-1,)
 
-def buscar_evento_semana(hoje, sexta):
+def buscar_evento_semana(dia_escolhido, proximo_dia):
     print("[Função buscar_evento_semana]")
     conexao = sqlite3.connect('cronograma.db')
     print('Conexão feita')
@@ -257,7 +294,7 @@ def buscar_evento_semana(hoje, sexta):
             SELECT * FROM eventos
             WHERE data_evento BETWEEN ? AND ?
             ORDER BY data_evento ASC, materia ASC;
-        """, (hoje, sexta,)
+        """, (dia_escolhido, proximo_dia,)
     )
     print('Comando dado')
 

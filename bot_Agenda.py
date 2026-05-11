@@ -196,7 +196,7 @@ def on_message(client: NewClient, event: MessageEv):
             resposta.append("   Se você usar \"tutorial [comando]\", você irar ver um tutorial mais completo do comando especificado")
 
 
-        elif resultado[0] == 'status' or resultado[0] == 'hoje' or resultado[0] == 'amanha' or resultado[0] == 'amanhã' or resultado[0] == 'semana' or resultado[0] == 'listar' or resultado[0] == 'proximo_mes':
+        elif resultado[0] == 'status' or resultado[0] == 'hoje' or resultado[0] == 'amanha' or resultado[0] == 'amanhã' or resultado[0] == 'semana' or resultado[0] == 'listar' or resultado[0] == 'proximo_mes' or resultado[0] == 'mes' or resultado[0] == 'mes':
             if resultado[1]: # Resultado[1] = (ID, Data, Matéria, Tipo, Descrição)
 
                 meses = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']
@@ -207,7 +207,7 @@ def on_message(client: NewClient, event: MessageEv):
                     print(f'Informação sendo colocado na resposta: {infos}')
 
                     data = infos[1]
-                    if mes_atual != meses[int(data[5:7])-1] and not resultado[0] in ('hoje','amanha','amanhã','semana'): # 2026-05-08
+                    if mes_atual != meses[int(data[5:7])-1] and not resultado[0] in ('hoje','amanha','amanhã','semana', "proxima_semana"): # 2026-05-08
                         mes_atual = meses[int(data[5:7])-1]
                         resposta.append(f"📅 *{mes_atual}*")
                     if data_antiga != data:
@@ -434,6 +434,20 @@ def on_message(client: NewClient, event: MessageEv):
                     resposta.append("   proximo mes")
                     resposta.append("―――――――――――――――――――――――")
                     resposta.append("obs: Para usar você realmente só escreve \"proximo mes\"")
+
+                elif resultado[1] == 'mes':
+                    resposta.append("Com o comando *mes* você pode ver tudo que vai ter nesse mês")
+                    resposta.append("*Como usar?*")
+                    resposta.append("   mes")
+                    resposta.append("―――――――――――――――――――――――")
+                    resposta.append("obs: Para usar você realmente só escreve \"mes\"")
+                
+                elif resultado[1] == "proxima_semana":
+                    resposta.append("Com o comando *proxima semana* você pode ver tudo que vai ter na próxima semana")
+                    resposta.append("*Como usar?*")
+                    resposta.append("   proxima semana")
+                    resposta.append("―――――――――――――――――――――――")
+                    resposta.append("obs: Para usar você realmente só escreve \"proxima semana\"")
         
         elif resultado[0] == 'deletar':
             if resultado[1] == 'sem_permissão':
