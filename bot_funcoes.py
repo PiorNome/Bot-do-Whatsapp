@@ -431,11 +431,14 @@ def editar_bd(texto:str):
             return f"sucesso_{campo_alvo}"
         
         elif len(resultados) == 0:
+            print("Não foi encontrado nenhum evento")
             print('[Acabou função editar_bd]')
             return "sem_eventos"
         
         elif len(resultados) == 1 and infos[1].isdecimal():
+            print("Teve só um resultado e o segundo elemendo da lista 'infos' é numeros decimais")
             if not infos[2] in ('materia','matéria','tipo','descrição', 'descriçao', 'descricão', 'descricao',):
+                print("Tipo errado")
                 print('[Acabou função editar_bd]')
                 return 'campo_invalido'
             
@@ -447,11 +450,12 @@ def editar_bd(texto:str):
                 campo_alvo = "tipo"
 
             curso.execute(
-                '''UPDATE eventos SET ? = ?
+                f'''UPDATE eventos SET {campo_alvo} = ?
                 WHERE id = ?
-                ''',(campo_alvo, ", ".join(infos[2:]), resultados[0][0],)
+                ''',(", ".join(infos[2:]), resultados[0][0],)
             )
             conexao.commit()
+            print("Mudança feita")
             curso.close()
             conexao.close()
 
