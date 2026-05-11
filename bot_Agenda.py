@@ -196,7 +196,7 @@ def on_message(client: NewClient, event: MessageEv):
             resposta.append("   Se você usar \"tutorial [comando]\", você irar ver um tutorial mais completo do comando especificado")
 
 
-        elif resultado[0] == 'status' or resultado[0] == 'hoje' or resultado[0] == 'amanha' or resultado[0] == 'amanhã' or resultado[0] == 'semana' or resultado[0] == 'listar' or resultado[0] == 'proximo_mes' or resultado[0] == 'mes' or resultado[0] == 'mes':
+        elif resultado[0] == 'status' or resultado[0] == 'hoje' or resultado[0] == 'amanha' or resultado[0] == 'amanhã' or resultado[0] == 'semana' or resultado[0] == 'listar' or resultado[0] == 'proximo_mes' or resultado[0] == 'proxima_semana' or resultado[0] == 'mes':
             if resultado[1]: # Resultado[1] = (ID, Data, Matéria, Tipo, Descrição)
 
                 meses = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']
