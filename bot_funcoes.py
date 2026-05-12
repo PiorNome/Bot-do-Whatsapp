@@ -656,7 +656,7 @@ def tarefa(client: NewClient):
         dia_da_semana = agora.weekday()  # Segunda=0, Sexta=4
         hora_atual = agora.strftime("%H:%M")
         confirmacao_envio = open("confirmacao.txt", "r")
-        if ((dia_da_semana == 4 and hora_atual == "11:30") or (dia_da_semana == 5 and hora_atual == "13:00") or (dia_da_semana == 6 and hora_atual == "13:00")) and not "enviado" in confirmacao_envio.read().lower():
+        if ((dia_da_semana == 0 and hora_atual == "15:45") or (dia_da_semana == 5 and hora_atual == "13:00") or (dia_da_semana == 6 and hora_atual == "13:00")) and not "enviado" in confirmacao_envio.read().lower():
             amigo = build_jid(os.getenv("AMIGO"))
             with open('emojis_materias.json', 'r', encoding='utf-8') as f:
                 materia_emojis:dict = json.load(f)
