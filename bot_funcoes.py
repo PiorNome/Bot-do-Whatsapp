@@ -1,4 +1,5 @@
-import os, sqlite3, json
+import os, sqlite3, json, io
+from PIL import Image
 from time import sleep
 from datetime import *
 from dateutil.relativedelta import relativedelta
@@ -183,10 +184,6 @@ def decidir_destino(texto:str, numero_celular:str) -> tuple[str, any]:
             data = proximo_mes.strftime("%Y-%m-%d")
             eventos= eventos_proximo_mes(data)
             return (comando, eventos,)       
-
-    print(f"Tamanho da lista: {len(lista_strs)}")
-    print(f"Item 0: {repr(lista_strs[0])} - Está no grupo? {lista_strs[0] in ('próximo','proximo','próxima','proxima')}")
-    print(f"Item 1: {repr(lista_strs[1])} - É igual a 'semana'? {lista_strs[1] == 'semana'}")
 
     if len(lista_strs) >= 2:
         print("Entrou no elif com sucesso!")
@@ -839,3 +836,17 @@ def exclucao_atutomatica():
 
         # Dorme por 24 horas
         sleep(86400)
+
+def converter_imagem(caminho_imagem):
+    print("Entrou")
+    with Image.open(caminho_imagem) as img:
+        img = img.convert("RGBA")
+        print("Tem tansparença")
+        nome_arquivo = os.path.splitext(caminho_imagem)[0] + ".webp"
+        print(f"O nome é {nome_arquivo}")
+
+        img.save(nome_arquivo, format="WEBP")
+        print("Salvo")
+
+    os.remove(caminho_imagem)
+    print("Imagem original removida")

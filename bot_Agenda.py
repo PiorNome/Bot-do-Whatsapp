@@ -1,5 +1,6 @@
 import os, time, json, threading
 import bot_funcoes
+import random, shutil
 from datetime import datetime
 from neonize.client import NewClient
 from neonize.events import MessageEv, ConnectedEv
@@ -10,13 +11,39 @@ representates = os.getenv('REPRESENTATES')
 
 hora_inicio = time.time()
 
-client = NewClient("whatsapp.db")
-
 with open('emojis_materias.json', 'r', encoding='utf-8') as f:
     materia_emojis = json.load(f)
 
 thread_cronograma = None
 thread_deletar = None
+
+if os.path.exists("./figurinhas"):
+    figurinhas_pasta = os.listdir("./figurinhas/")
+    try:
+        if figurinhas_pasta:
+            for figurinha in figurinhas_pasta:
+                print(f"O arquivo é {figurinha}")
+                if not figurinha.lower().endswith(".webp"):
+                    caminho_figura = os.path.join("./figurinhas/", figurinha)
+                    print(f"Com o caminho ficou {caminho_figura}")
+                    try:
+                        bot_funcoes.converter_imagem(caminho_figura)
+                    except: pass
+    finally:
+        print("Movendo arquivos que não foram convertidos...")
+        arquivos_pasta = os.listdir("./figurinhas/")
+        os.makedirs("arquivos_nao_convertidos", exist_ok=True)
+
+        for arquivo in arquivos_pasta:
+            if not arquivo.lower().endswith("webp"):
+                caminho = os.path.join("./figurinhas/", arquivo)
+
+                shutil.move(caminho, f"./arquivos_nao_convertidos/{arquivo}")
+
+
+mandar_fig = len(os.listdir("./figurinhas/")) >= 1
+
+client = NewClient("whatsapp.db")
 
 @client.event(ConnectedEv)
 def on_connected(client: NewClient, event: ConnectedEv):
@@ -188,6 +215,8 @@ def on_message(client: NewClient, event: MessageEv):
             resposta.append("   hoje")
             resposta.append("   amanha")
             resposta.append("   semana")
+            resposta.append("   proximo mes")
+            resposta.append("   mes que vem")
             resposta.append("   tutorial")
             resposta.append('―――――――――――――――――――――――')
             resposta.append("obs: Não coloque as informações dentro de colchetes")
@@ -304,6 +333,8 @@ def on_message(client: NewClient, event: MessageEv):
                 resposta.append("   hoje")
                 resposta.append("   amanha")
                 resposta.append("   semana")
+                resposta.append("   proximo mes")
+                resposta.append("   mes que vem")
                 resposta.append("   tutorial")
                 resposta.append('―――――――――――――――――――――――')
                 resposta.append('Dica: ')
@@ -327,6 +358,8 @@ def on_message(client: NewClient, event: MessageEv):
                 resposta.append("   hoje")
                 resposta.append("   amanha")
                 resposta.append("   semana")
+                resposta.append("   proximo mes")
+                resposta.append("   mes que vem")
                 resposta.append("   tutorial")
                 resposta.append('―――――――――――――――――――――――')
                 resposta.append("obs: Não coloque as informações dentro de colchetes")
@@ -464,11 +497,18 @@ def on_message(client: NewClient, event: MessageEv):
                 
 
         resposta_final = '\n'.join(resposta)
+        print(f"A mensagem que será enviada é: {resposta}")
 
         client.send_message(remetente_jid, resposta_final.strip())
 
-        print(f"A mensagem que será enviada é: {resposta}")
+        if random.randint(1, 100) <= 5 and mandar_fig:
+            figurinha_escolhida = random.choice(os.listdir("./figurinhas/"))
+
+            figurinha_escolhida = os.path.join("./figurinhas/", figurinha_escolhida)
+
+            client.send_sticker(remetente_jid, figurinha_escolhida)
+
     except:
-        pass
+        client.send_message(remetente_jid, "Parece que aconteceu um erro interno")
 
 client.connect()
