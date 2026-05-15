@@ -1,4 +1,4 @@
-import os, sqlite3, json, io
+import os, sqlite3, json
 from PIL import Image
 from time import sleep
 from datetime import *
@@ -10,7 +10,7 @@ load_dotenv()
 def decidir_destino(texto:str, numero_celular:str) -> tuple[str, any]:
     print(f"[Função: decidir_destino]")
     print(f"Recebeu {texto}")
-    comandos = ['agendar', 'status', 'hoje', 'amanha', 'amanhã', 'tutorial', 'editar', 'semana', 'listar', 'deletar', 'mês', 'mes']
+    comandos = ['agendar', 'status', 'hoje', 'amanha', 'amanhã', 'tutorial', 'editar', 'semana', 'listar', 'deletar', 'mês', 'mes', 'cronograma']
     lista_strs = texto.lower().split()
     numeros = os.getenv('REPRESENTATES')
     REPRESENTATES = numeros.split(' , ')
@@ -165,6 +165,13 @@ def decidir_destino(texto:str, numero_celular:str) -> tuple[str, any]:
                 return (comando, 'falha_interna',)
             
             return (comando, qnt_deletado,)
+        
+        elif lista_strs[0] == "cronograma":
+            comando = "cronograma"
+
+            eventos_pegos = buscar_eventos()
+
+            return (comando, eventos_pegos,)
         
     if (qnt_lista_strs:= len(lista_strs)) in (2,3,):
         passa_mes = False

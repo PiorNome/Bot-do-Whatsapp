@@ -1,6 +1,7 @@
 import os, time, json, threading
 import bot_funcoes
 import random, shutil
+from datetime import timedelta
 from datetime import datetime
 from neonize.client import NewClient
 from neonize.events import MessageEv, ConnectedEv
@@ -12,7 +13,7 @@ representates = os.getenv('REPRESENTATES')
 hora_inicio = time.time()
 
 with open('emojis_materias.json', 'r', encoding='utf-8') as f:
-    materia_emojis = json.load(f)
+    materia_emojis:dict = json.load(f)
 
 thread_cronograma = None
 thread_deletar = None
@@ -43,6 +44,8 @@ if os.path.exists("./figurinhas"):
 
 mandar_fig = len(os.listdir("./figurinhas/")) >= 1
 
+print(f"Mandar figurinha = {mandar_fig}")
+
 client = NewClient("whatsapp.db")
 
 @client.event(ConnectedEv)
@@ -61,6 +64,7 @@ def on_connected(client: NewClient, event: ConnectedEv):
 # Usando o que o seu terminal encontrou: 'event'
 @client.event(MessageEv)
 def on_message(client: NewClient, event: MessageEv):
+    global mandar_fig
     print(f"Mensagem recebida do CHAT ID: {event.Info.MessageSource.Chat}")
 
     hora_mensagem = event.Info.Timestamp / 1000
@@ -494,6 +498,125 @@ def on_message(client: NewClient, event: MessageEv):
                 resposta.append("Evento apagado da face da terra com sucesso")
             elif resultado[1] >= 2:
                 resposta.append("Aparentemente ouve um erro e apaguei mais de um evento.")
+
+        elif resultado[0] == "cronograma":
+            primeira = True
+            primeira_barra = False
+            
+            hoje = (datetime.now()).replace(hour=0,minute=0,second=0,microsecond=0)
+            amanha = (datetime.now() + timedelta(days=1)).replace(hour=0,minute=0,second=0,microsecond=0)
+            sabado = (datetime.now()).replace(hour=0,minute=0,second=0,microsecond=0)
+            data_antiga = (datetime.now() + timedelta(days=1)).replace(hour=0,minute=0,second=0,microsecond=0)
+
+            meses = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']
+
+            for dia in range(1, 10):
+                sabado = sabado + timedelta(days=1)
+                if sabado.weekday() == 5:
+                    break
+            proxima_semana = sabado + timedelta(days=1)
+            fim_proxima = proxima_semana + timedelta(days=6)
+
+            with open('constantes.json', 'r', encoding='utf-8') as f:
+                    MATERIAS:dict = json.load(f)
+
+            resposta.append('📅 CRONOGRAMA DA SEMANA')
+            resposta.append('\n━━━━━━━━━━━━━━━━━')
+            
+            for infos in resultado[1]:
+
+                parte_mensagem_enviara = []
+                print(f'Informação sendo colocado na resposta: {infos}')
+
+                data_atual = datetime.strptime(infos[1], "%Y-%m-%d")
+                if data_atual.date() == hoje.date():
+                    continue
+
+                if data_atual.date() <= sabado.date():
+                    if not f'📍 *ESSA SEMANA* ({amanha.strftime("%d/%m")} - {sabado.strftime("%d/%m")}):\n' in resposta:
+                        resposta.append(f'📍 *ESSA SEMANA* ({amanha.strftime("%d/%m")} - {sabado.strftime("%d/%m")}):\n')
+                    
+                    if primeira or data_atual.date() != data_antiga.date():
+                        primeira = False
+                        data_antiga = datetime.strptime(data_atual.strftime('%d/%m/%Y'), '%d/%m/%Y')
+                        parte_mensagem_enviara.append(f'### {data_atual.strftime("%d/%m")}')
+
+
+                    parte_mensagem_enviara.append(f'- {infos[3]} - {infos[2]} {materia_emojis[infos[2]]}')
+
+                    resposta.extend(parte_mensagem_enviara)
+                    if infos[4] != 'Vazio':
+                        descricao = infos[4].replace('\n', '\n> ')
+                        resposta.append(f'> {descricao}')
+
+                elif data_atual.date() <= fim_proxima.date():
+                    if not f'📍 *ESSA SEMANA* ({amanha.strftime("%d/%m")} - {sabado.strftime("%d/%m")}):\n' in resposta:
+                        resposta.append(f'📍 *ESSA SEMANA* ({amanha.strftime("%d/%m")} - {sabado.strftime("%d/%m")}):\n')
+                        resposta.append("(🦗🦗🦗)\n")
+
+                    if not f'📍 *PRÓXIMA SEMANA* ({proxima_semana.strftime("%d/%m")} - {fim_proxima.strftime("%d/%m")}):\n' in resposta:
+                        parte_mensagem_enviara.append(f'📍 *PRÓXIMA SEMANA* ({proxima_semana.strftime("%d/%m")} - {fim_proxima.strftime("%d/%m")}):\n')
+
+                    if data_atual.date() != data_antiga.date():
+                        primeira = False
+                        data_antiga = datetime.strptime(data_atual.strftime('%d/%m/%Y'), '%d/%m/%Y')
+                        parte_mensagem_enviara.append(f'### {data_atual.strftime("%d/%m")}')
+
+                    if materia_emojis.get(infos[2]) is None:
+                        for materia_key in MATERIAS.keys():
+                            if infos[2].lower() in MATERIAS[materia_key]:
+                                materia = materia_key
+                                print(f"Encontro a matéria: {materia}")
+                                emoji = materia_emojis[materia]
+                                break
+                    else:
+                        emoji = materia_emojis[infos[2]]
+                        materia = infos[2]
+
+                    parte_mensagem_enviara.append(f'{infos[3]} - {materia} {emoji} ')
+
+                    resposta.extend(parte_mensagem_enviara)
+                    if infos[4] != 'Vazio':
+                        descricao = infos[4].replace('\n', '\n> ')
+                        resposta.append(f'> {descricao}')
+                
+                else:
+                    if not f'📍 *ESSA SEMANA* ({amanha.strftime("%d/%m")} - {sabado.strftime("%d/%m")}):\n' in resposta:
+                        resposta.append(f'📍 *ESSA SEMANA* ({amanha.strftime("%d/%m")} - {sabado.strftime("%d/%m")}):\n')
+                        resposta.append("(🦗🦗🦗)\n")
+
+                    if not f'📍 *PRÓXIMA SEMANA* ({proxima_semana.strftime("%d/%m")} - {fim_proxima.strftime("%d/%m")}):\n' in resposta:
+                        resposta.append(f'📍 *PRÓXIMA SEMANA* ({proxima_semana.strftime("%d/%m")} - {fim_proxima.strftime("%d/%m")}):\n')
+                        resposta.append("(🦗🦗🦗)\n")
+
+                    if not primeira_barra:
+                        resposta.append("━━━━━━━━━━━━━━━━━")
+                        primeira_barra = True
+                    if not f"📅 *{meses[int(data_atual.strftime('%m'))-1]}*" in resposta:
+                        resposta.append(f"📅 *{meses[int(data_atual.strftime('%m'))-1]}*")
+
+                    if materia_emojis.get(infos[2]) is None:
+                        for materia_key in MATERIAS.keys():
+                            if infos[2].lower() in MATERIAS[materia_key]:
+                                materia = materia_key
+                                print(f"Encontro a matéria: {materia}")
+                                emoji = materia_emojis[materia]
+                                break
+                    else:
+                        emoji = materia_emojis[infos[2]]
+                        materia = infos[2]
+                    
+                    parte_mensagem_enviara.append(f'{emoji} {data_atual.strftime("%d/%m")} {infos[3]} - {materia}')
+
+                    resposta.extend(parte_mensagem_enviara)
+                    if infos[4] != 'Vazio':
+                        descricao = infos[4].replace('\n', '\n> ')
+                        resposta.append(f'> {descricao}')
+
+                resposta.append('')
+
+        else:
+            resposta.append("Não a nenhum evento programado")
                 
 
         resposta_final = '\n'.join(resposta)
@@ -501,14 +624,16 @@ def on_message(client: NewClient, event: MessageEv):
 
         client.send_message(remetente_jid, resposta_final.strip())
 
-        if random.randint(1, 100) <= 5 and mandar_fig:
+        if random.randint(1, 100) <= 20 and mandar_fig:
+            print("Uma figurinha vai ser mandada")
             figurinha_escolhida = random.choice(os.listdir("./figurinhas/"))
 
             figurinha_escolhida = os.path.join("./figurinhas/", figurinha_escolhida)
 
             client.send_sticker(remetente_jid, figurinha_escolhida)
 
-    except:
+    except Exception as e:
         client.send_message(remetente_jid, "Parece que aconteceu um erro interno")
+        print(f'ERROR: {e}')
 
 client.connect()
