@@ -168,6 +168,10 @@ def decidir_destino(texto:str, numero_celular:str) -> tuple[str, any]:
         
         elif lista_strs[0] == "cronograma":
             comando = "cronograma"
+            amigo_JID = os.getenv("AMIGO_JID")
+            if not numero_celular == amigo_JID:
+                print(f"O número {numero_celular} não é ADMIN")
+                return (comando, 'sem_permissão')
 
             eventos_pegos = buscar_eventos()
 
@@ -453,6 +457,7 @@ def editar_bd(texto:str):
                 print("Tipo invalido")
                 print('[Acabou função editar_bd]')
                 return "campo_alvo_invalido"
+            print("Tipo valido")
             
             if infos[2] in ('materia','matéria'):
                 campo_alvo = "materia"
@@ -460,12 +465,17 @@ def editar_bd(texto:str):
                 campo_alvo = "descricao"
             else:
                 campo_alvo = "tipo"
+            print(f"campo_alvo = {campo_alvo}")
+
+            numero_texto = resultados[int(infos[1])-1]
         
             curso.execute(
                 f'''UPDATE eventos SET {campo_alvo} = ? 
-                WHERE id = ?''', (", ".join(infos[3:]), resultados[int(infos[1])-1])
+                WHERE id = ?''', (", ".join(infos[3:]), numero_texto[0])
             )
+            print("Execute usado com sucesso")
             conexao.commit()
+            print("Commitado")
             curso.close()
             conexao.close()
             print('[Acabou função editar_bd]')
@@ -493,7 +503,7 @@ def editar_bd(texto:str):
             curso.execute(
                 f'''UPDATE eventos SET {campo_alvo} = ?
                 WHERE id = ?
-                ''',(", ".join(infos[2:]), resultados[0][0],)
+                ''',(", ".join(infos[3:]), resultados[0][0],)
             )
             conexao.commit()
             print("Mudança feita")
@@ -660,7 +670,7 @@ def tarefa(client: NewClient):
         dia_da_semana = agora.weekday()  # Segunda=0, Sexta=4
         hora_atual = agora.strftime("%H:%M")
         confirmacao_envio = open("confirmacao.txt", "r")
-        if ((dia_da_semana == 4 and hora_atual == "12:30") or (dia_da_semana == 5 and hora_atual == "13:00") or (dia_da_semana == 6 and hora_atual == "13:00")) and not "enviado" in confirmacao_envio.read().lower():
+        if ((dia_da_semana == 4 and hora_atual == "11:30") or (dia_da_semana == 5 and hora_atual == "13:00") or (dia_da_semana == 6 and hora_atual == "13:00")) and not "enviado" in confirmacao_envio.read().lower():
             amigo = build_jid(os.getenv("AMIGO"))
             with open('emojis_materias.json', 'r', encoding='utf-8') as f:
                 materia_emojis:dict = json.load(f)
@@ -673,7 +683,7 @@ def tarefa(client: NewClient):
             if len(eventos_pegos) > 0: # eventos_pegos = (ID, Data, Matéria, Tipo, Descrição)
                 
                 mensagem.append('📅 CRONOGRAMA DA SEMANA')
-                mensagem.append('\n━━━━━━━━━━━━━━━━━')
+                mensagem.append('\n━━━━━━━━━━━━━━━━')
 
                 data_antiga = datetime.now() + timedelta(days=1)
                 primeira = True
@@ -705,9 +715,15 @@ def tarefa(client: NewClient):
                         if infos[4] != 'Vazio':
                             descricao = infos[4].replace('\n', '\n> ')
                             mensagem.append(f'> {descricao}')
+                        mensagem.append("> ___")
 
                     elif data_atual.date() <= fim_proxima.date():
+                        if not f'📍 *ESSA SEMANA* ({domingo.strftime("%d/%m")} - {sabado.strftime("%d/%m")}):\n' in mensagem:
+                            mensagem.append(f'📍 *ESSA SEMANA* ({domingo.strftime("%d/%m")} - {sabado.strftime("%d/%m")}):\n')
+                            mensagem.append("(🦗🦗🦗)\n")
+
                         if not f'📍 *PRÓXIMA SEMANA* ({proxima_semana.strftime("%d/%m")} - {fim_proxima.strftime("%d/%m")}):\n' in mensagem:
+                            mensagem.append('\n━━━━━━━━━━━━━━━━')
                             parte_mensagem_enviara.append(f'📍 *PRÓXIMA SEMANA* ({proxima_semana.strftime("%d/%m")} - {fim_proxima.strftime("%d/%m")}):\n')
 
                         if data_atual.date() != data_antiga.date():
@@ -732,8 +748,17 @@ def tarefa(client: NewClient):
                         if infos[4] != 'Vazio':
                             descricao = infos[4].replace('\n', '\n> ')
                             mensagem.append(f'> {descricao}')
+                        mensagem.append("> ___")
                     
                     else:
+                        if not f'📍 *ESSA SEMANA* ({domingo.strftime("%d/%m")} - {sabado.strftime("%d/%m")}):\n' in mensagem:
+                            mensagem.append(f'📍 *ESSA SEMANA* ({domingo.strftime("%d/%m")} - {sabado.strftime("%d/%m")}):\n')
+                            mensagem.append("(🦗🦗🦗)\n")
+
+                        if not f'📍 *PRÓXIMA SEMANA* ({proxima_semana.strftime("%d/%m")} - {fim_proxima.strftime("%d/%m")}):\n' in mensagem:
+                            mensagem.append(f'📍 *PRÓXIMA SEMANA* ({proxima_semana.strftime("%d/%m")} - {fim_proxima.strftime("%d/%m")}):\n')
+                            mensagem.append("(🦗🦗🦗)\n")
+
                         if not primeira_barra:
                             mensagem.append("━━━━━━━━━━━━━━━━━")
                             primeira_barra = True
@@ -757,8 +782,7 @@ def tarefa(client: NewClient):
                         if infos[4] != 'Vazio':
                             descricao = infos[4].replace('\n', '\n> ')
                             mensagem.append(f'> {descricao}')
-
-                    mensagem.append('')
+                        mensagem.append("> ___")
 
             else:
                 mensagem.append("Não a nenhum evento programado")

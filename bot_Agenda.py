@@ -121,6 +121,8 @@ def on_message(client: NewClient, event: MessageEv):
         texto = texto.strip()
         lista_strgs = texto.split(",")
         print(f"lista_strngs: {lista_strgs}")
+
+        executou_if = True
         if lista_strgs[0].lower() in ["s","si","sm","sim","yes","y", "pode", "sin"]:
             client.send_message(remetente_jid, "Cronocrama Sendo enviado...")
             comunidade = build_jid(os.getenv("GRUPO_COMUNIDADE_TESTE"), "g.us")
@@ -143,19 +145,23 @@ def on_message(client: NewClient, event: MessageEv):
             confirmacao.write("enviado")
             confirmacao.close()
 
-        else:
+        elif lista_strgs[0].lower() in ['nao', 'não', 'n', 'no', 'negativo', "talvez", 'pq']:
             if dia_semana in (4,5,):
                 client.send_message(remetente_jid, "Vou perguntar denovo amanhã")
             else:
                 client.send_message(remetente_jid, "Então o envio terá que ser manual")
-
-        with open("confirmacao.txt", "w", encoding="utf-8") as desconfirmacao:
-            desconfirmacao.write("Sei lá, só precisava tirar o que tava")
-        with open("cronograma.txt", "w", encoding="utf-8") as descronograma:
-            descronograma.write("Sei lá, só precisava tirar o que tava")
-        desconfirmacao.close()
-        descronograma.close()
-        return
+        
+        else:
+            executou_if = False
+        
+        if executou_if:
+            with open("confirmacao.txt", "w", encoding="utf-8") as desconfirmacao:
+                desconfirmacao.write("Sei lá, só precisava tirar o que tava")
+            with open("cronograma.txt", "w", encoding="utf-8") as descronograma:
+                descronograma.write("Sei lá, só precisava tirar o que tava")
+            desconfirmacao.close()
+            descronograma.close()
+            return
     
     
     try:
@@ -500,123 +506,142 @@ def on_message(client: NewClient, event: MessageEv):
                 resposta.append("Aparentemente ouve um erro e apaguei mais de um evento.")
 
         elif resultado[0] == "cronograma":
-            primeira = True
-            primeira_barra = False
-            
-            hoje = (datetime.now()).replace(hour=0,minute=0,second=0,microsecond=0)
-            amanha = (datetime.now() + timedelta(days=1)).replace(hour=0,minute=0,second=0,microsecond=0)
-            sabado = (datetime.now()).replace(hour=0,minute=0,second=0,microsecond=0)
-            data_antiga = (datetime.now() + timedelta(days=1)).replace(hour=0,minute=0,second=0,microsecond=0)
+            if resultado[1] == 'sem_permissão':
+                resposta.append("Você não tem permissão para usar esse comando")
 
-            meses = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']
-
-            for dia in range(1, 10):
-                sabado = sabado + timedelta(days=1)
-                if sabado.weekday() == 5:
-                    break
-            proxima_semana = sabado + timedelta(days=1)
-            fim_proxima = proxima_semana + timedelta(days=6)
-
-            with open('constantes.json', 'r', encoding='utf-8') as f:
-                    MATERIAS:dict = json.load(f)
-
-            resposta.append('📅 CRONOGRAMA DA SEMANA')
-            resposta.append('\n━━━━━━━━━━━━━━━━━')
-            
-            for infos in resultado[1]:
-
-                parte_mensagem_enviara = []
-                print(f'Informação sendo colocado na resposta: {infos}')
-
-                data_atual = datetime.strptime(infos[1], "%Y-%m-%d")
-                if data_atual.date() == hoje.date():
-                    continue
-
-                if data_atual.date() <= sabado.date():
-                    if not f'📍 *ESSA SEMANA* ({amanha.strftime("%d/%m")} - {sabado.strftime("%d/%m")}):\n' in resposta:
-                        resposta.append(f'📍 *ESSA SEMANA* ({amanha.strftime("%d/%m")} - {sabado.strftime("%d/%m")}):\n')
-                    
-                    if primeira or data_atual.date() != data_antiga.date():
-                        primeira = False
-                        data_antiga = datetime.strptime(data_atual.strftime('%d/%m/%Y'), '%d/%m/%Y')
-                        parte_mensagem_enviara.append(f'### {data_atual.strftime("%d/%m")}')
-
-
-                    parte_mensagem_enviara.append(f'- {infos[3]} - {infos[2]} {materia_emojis[infos[2]]}')
-
-                    resposta.extend(parte_mensagem_enviara)
-                    if infos[4] != 'Vazio':
-                        descricao = infos[4].replace('\n', '\n> ')
-                        resposta.append(f'> {descricao}')
-
-                elif data_atual.date() <= fim_proxima.date():
-                    if not f'📍 *ESSA SEMANA* ({amanha.strftime("%d/%m")} - {sabado.strftime("%d/%m")}):\n' in resposta:
-                        resposta.append(f'📍 *ESSA SEMANA* ({amanha.strftime("%d/%m")} - {sabado.strftime("%d/%m")}):\n')
-                        resposta.append("(🦗🦗🦗)\n")
-
-                    if not f'📍 *PRÓXIMA SEMANA* ({proxima_semana.strftime("%d/%m")} - {fim_proxima.strftime("%d/%m")}):\n' in resposta:
-                        parte_mensagem_enviara.append(f'📍 *PRÓXIMA SEMANA* ({proxima_semana.strftime("%d/%m")} - {fim_proxima.strftime("%d/%m")}):\n')
-
-                    if data_atual.date() != data_antiga.date():
-                        primeira = False
-                        data_antiga = datetime.strptime(data_atual.strftime('%d/%m/%Y'), '%d/%m/%Y')
-                        parte_mensagem_enviara.append(f'### {data_atual.strftime("%d/%m")}')
-
-                    if materia_emojis.get(infos[2]) is None:
-                        for materia_key in MATERIAS.keys():
-                            if infos[2].lower() in MATERIAS[materia_key]:
-                                materia = materia_key
-                                print(f"Encontro a matéria: {materia}")
-                                emoji = materia_emojis[materia]
-                                break
-                    else:
-                        emoji = materia_emojis[infos[2]]
-                        materia = infos[2]
-
-                    parte_mensagem_enviara.append(f'{infos[3]} - {materia} {emoji} ')
-
-                    resposta.extend(parte_mensagem_enviara)
-                    if infos[4] != 'Vazio':
-                        descricao = infos[4].replace('\n', '\n> ')
-                        resposta.append(f'> {descricao}')
+            else:
+                primeira = True
+                primeira_barra = False
                 
-                else:
-                    if not f'📍 *ESSA SEMANA* ({amanha.strftime("%d/%m")} - {sabado.strftime("%d/%m")}):\n' in resposta:
-                        resposta.append(f'📍 *ESSA SEMANA* ({amanha.strftime("%d/%m")} - {sabado.strftime("%d/%m")}):\n')
-                        resposta.append("(🦗🦗🦗)\n")
+                hoje = (datetime.now()).replace(hour=0,minute=0,second=0,microsecond=0)
+                amanha = (datetime.now() + timedelta(days=1)).replace(hour=0,minute=0,second=0,microsecond=0)
+                sabado = (datetime.now()).replace(hour=0,minute=0,second=0,microsecond=0)
+                data_antiga = (datetime.now() + timedelta(days=1)).replace(hour=0,minute=0,second=0,microsecond=0)
 
-                    if not f'📍 *PRÓXIMA SEMANA* ({proxima_semana.strftime("%d/%m")} - {fim_proxima.strftime("%d/%m")}):\n' in resposta:
-                        resposta.append(f'📍 *PRÓXIMA SEMANA* ({proxima_semana.strftime("%d/%m")} - {fim_proxima.strftime("%d/%m")}):\n')
-                        resposta.append("(🦗🦗🦗)\n")
+                meses = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']
 
-                    if not primeira_barra:
-                        resposta.append("━━━━━━━━━━━━━━━━━")
-                        primeira_barra = True
-                    if not f"📅 *{meses[int(data_atual.strftime('%m'))-1]}*" in resposta:
-                        resposta.append(f"📅 *{meses[int(data_atual.strftime('%m'))-1]}*")
+                for dia in range(1, 10):
+                    sabado = sabado + timedelta(days=1)
+                    if sabado.weekday() == 5:
+                        break
+                proxima_semana = sabado + timedelta(days=1)
+                fim_proxima = proxima_semana + timedelta(days=6)
 
-                    if materia_emojis.get(infos[2]) is None:
-                        for materia_key in MATERIAS.keys():
-                            if infos[2].lower() in MATERIAS[materia_key]:
-                                materia = materia_key
-                                print(f"Encontro a matéria: {materia}")
-                                emoji = materia_emojis[materia]
-                                break
-                    else:
-                        emoji = materia_emojis[infos[2]]
-                        materia = infos[2]
+                with open('constantes.json', 'r', encoding='utf-8') as f:
+                        MATERIAS:dict = json.load(f)
+
+                resposta.append('📅 CRONOGRAMA DA SEMANA')
+                resposta.append('\n━━━━━━━━━━━━━━━━━')
+                
+                for infos in resultado[1]:
+
+                    parte_mensagem_enviara = []
+                    print(f'Informação sendo colocado na resposta: {infos}')
+
+                    data_atual = datetime.strptime(infos[1], "%Y-%m-%d")
+                    if data_atual.date() == hoje.date():
+                        continue
+
+                    if data_atual.date() <= sabado.date():
+                        if not f'📍 *ESSA SEMANA* ({amanha.strftime("%d/%m")} - {sabado.strftime("%d/%m")}):\n' in resposta:
+                            resposta.append(f'📍 *ESSA SEMANA* ({amanha.strftime("%d/%m")} - {sabado.strftime("%d/%m")}):\n')
+                            resposta.append("> ___")
+                        
+                        if primeira or data_atual.date() != data_antiga.date():
+                            primeira = False
+                            data_antiga = datetime.strptime(data_atual.strftime('%d/%m/%Y'), '%d/%m/%Y')
+                            parte_mensagem_enviara.append(f'### {data_atual.strftime("%d/%m")}')
+
+
+                        parte_mensagem_enviara.append(f'- {infos[3]} - {infos[2]} {materia_emojis[infos[2]]}')
+
+                        resposta.extend(parte_mensagem_enviara)
+                        if infos[4] != 'Vazio':
+                            descricao = infos[4].replace('\n', '\n> ')
+                            resposta.append(f'> {descricao}')
+                        resposta.append("> ___")
+
+                    elif data_atual.date() <= fim_proxima.date():
+                        if not f'📍 *ESSA SEMANA* ({amanha.strftime("%d/%m")} - {sabado.strftime("%d/%m")}):\n' in resposta:
+                            resposta.append(f'📍 *ESSA SEMANA* ({amanha.strftime("%d/%m")} - {sabado.strftime("%d/%m")}):\n')
+                            resposta.append("(🦗🦗🦗)\n")
+                            resposta.append("> ___")
+
+                        if not f'📍 *PRÓXIMA SEMANA* ({proxima_semana.strftime("%d/%m")} - {fim_proxima.strftime("%d/%m")}):\n' in resposta:
+                            parte_mensagem_enviara.append(f'📍 *PRÓXIMA SEMANA* ({proxima_semana.strftime("%d/%m")} - {fim_proxima.strftime("%d/%m")}):\n')
+                            resposta.append("> ___")
+
+                        if data_atual.date() != data_antiga.date():
+                            primeira = False
+                            data_antiga = datetime.strptime(data_atual.strftime('%d/%m/%Y'), '%d/%m/%Y')
+                            parte_mensagem_enviara.append(f'### {data_atual.strftime("%d/%m")}')
+
+                        if materia_emojis.get(infos[2]) is None:
+                            for materia_key in MATERIAS.keys():
+                                if infos[2].lower() in MATERIAS[materia_key]:
+                                    materia = materia_key
+                                    print(f"Encontro a matéria: {materia}")
+                                    emoji = materia_emojis[materia]
+                                    break
+                        else:
+                            emoji = materia_emojis[infos[2]]
+                            materia = infos[2]
+
+                        parte_mensagem_enviara.append(f'{infos[3]} - {materia} {emoji} ')
+
+                        resposta.extend(parte_mensagem_enviara)
+                        if infos[4] != 'Vazio':
+                            descricao = infos[4].replace('\n', '\n> ')
+                            resposta.append(f'> {descricao}')
+                        resposta.append("> ___")
                     
-                    parte_mensagem_enviara.append(f'{emoji} {data_atual.strftime("%d/%m")} {infos[3]} - {materia}')
+                    else:
+                        if not f'📍 *ESSA SEMANA* ({amanha.strftime("%d/%m")} - {sabado.strftime("%d/%m")}):\n' in resposta:
+                            resposta.append(f'📍 *ESSA SEMANA* ({amanha.strftime("%d/%m")} - {sabado.strftime("%d/%m")}):\n')
+                            resposta.append("(🦗🦗🦗)\n")
+                            resposta.append("> ___")
 
-                    resposta.extend(parte_mensagem_enviara)
-                    if infos[4] != 'Vazio':
-                        descricao = infos[4].replace('\n', '\n> ')
-                        resposta.append(f'> {descricao}')
+                        if not f'📍 *PRÓXIMA SEMANA* ({proxima_semana.strftime("%d/%m")} - {fim_proxima.strftime("%d/%m")}):\n' in resposta:
+                            resposta.append(f'📍 *PRÓXIMA SEMANA* ({proxima_semana.strftime("%d/%m")} - {fim_proxima.strftime("%d/%m")}):\n')
+                            resposta.append("(🦗🦗🦗)\n")
+                            resposta.append("> ___")
 
-                resposta.append('')
+                        if not primeira_barra:
+                            resposta.append("━━━━━━━━━━━━━━━━━")
+                            primeira_barra = True
+                        if not f"📅 *{meses[int(data_atual.strftime('%m'))-1]}*" in resposta:
+                            resposta.append(f"📅 *{meses[int(data_atual.strftime('%m'))-1]}*")
+
+                        if materia_emojis.get(infos[2]) is None:
+                            for materia_key in MATERIAS.keys():
+                                if infos[2].lower() in MATERIAS[materia_key]:
+                                    materia = materia_key
+                                    print(f"Encontro a matéria: {materia}")
+                                    emoji = materia_emojis[materia]
+                                    break
+                        else:
+                            emoji = materia_emojis[infos[2]]
+                            materia = infos[2]
+                        
+                        parte_mensagem_enviara.append(f'{emoji} {data_atual.strftime("%d/%m")} {infos[3]} - {materia}')
+
+                        resposta.extend(parte_mensagem_enviara)
+                        if infos[4] != 'Vazio':
+                            descricao = infos[4].replace('\n', '\n> ')
+                            resposta.append(f'> {descricao}')
+                        resposta.append("> ___")
+
+                        salvar_texto = "\n".join(resposta)
+                        TXT = open("cronograma.txt", "w")
+                        TXT.write(salvar_texto)
+                        TXT.close()
+
+                        confirmar = open("confirmacao.txt", "w")
+                        confirmar.write(f"{datetime.now().strftime('%d/%m/%Y')}")
+                        confirmar.close()
 
         else:
-            resposta.append("Não a nenhum evento programado")
+            resposta.append("Não a nenhum evento programado") # Dá onde isso saiu?
                 
 
         resposta_final = '\n'.join(resposta)
