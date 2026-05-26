@@ -1,4 +1,4 @@
-import os, sqlite3, json
+import os, sqlite3, json, re
 from PIL import Image
 from time import sleep
 from datetime import *
@@ -198,7 +198,7 @@ def decidir_destino(texto:str, numero_celular:str) -> tuple[str, any]:
             return (comando, eventos,)       
 
     if len(lista_strs) >= 2:
-        print("Entrou no elif com sucesso!")
+        print("Entrou no if com sucesso!")
         if lista_strs[0] in ("próximo","proximo","próxima","proxima",) and lista_strs[1] == "semana":
             print("entou como procima semana")
             comando = "proxima_semana"
@@ -231,6 +231,53 @@ def decidir_destino(texto:str, numero_celular:str) -> tuple[str, any]:
                 mensagem_final = "\n".join(mensagem)
 
                 return (comando, mensagem_final,)
+    
+    if len(lista_strs) >= 1:
+        print("Entrou na verificação da data para agendamento")
+        try:
+            datetime.strptime(lista_strs[0].strip(), "%d/%m")
+            passou_agendar_data = True
+            print("Passou no teste")
+        except:
+            try:
+                datetime.strptime(lista_strs[0].strip()[:-1], "%d/%m")
+                passou_agendar_data = True
+                print("Passou no teste")
+            except:
+                passou_agendar_data = False
+                print("Reprovou no teste")
+
+        if passou_agendar_data:
+            if not numero_celular in REPRESENTATES:
+                print(f"O número {numero_celular} não é ADMIN")
+                return (comando, 'sem_permissão')
+            
+            print("Entrou no if")
+            agendamentos = separar_por_datas(texto)
+            print(f"Os agendamentos estão assim: {agendamentos}")
+            comando = "agendar"
+
+            erros = []
+            for evento in agendamentos:
+                erros.append(adicionar_bd(evento.strip()))
+            print(f"Função adicionar_bd retornou: {erros}")
+
+            retorna = []
+            ind_erro = ""
+            for erro in erros:
+                print(f"Peguei uma tupla: {erro}")
+                if -1 in erro:
+                        print(f'Tinha o valor -1, falta de argumentos')
+                        retorna.append('falta_agrs')
+                        continue
+                
+                ind_erro = str(erro[0]) + str(erro[1]) + str(erro[2])
+                print(f"Variavel ind_erro: {ind_erro}")
+                retorna.append(ind_erro)
+                ind_erro = ""
+            print(f"Será retornado: {comando} e {retorna}")
+            print("[Acabou a função decidir_destino]")
+            return (comando,tuple(retorna),)
 
     print("[Acabou a função decidir_destino]")
     return ('Najudar', None)
@@ -392,12 +439,25 @@ def editar_bd(texto:str):
     if editar_por_data:
         print("Entrou no editar por data")
         print(f"O segundo elemento é {infos[1]}")
-        if len(infos) > 4 and infos[2].lower() not in ('descrição', 'descriçao', 'descricão', 'descricao',):
+
+
+        # 1. Criamos a tupla de variações para o código ficar limpo
+        variacoes_desc = ('descrição', 'descriçao', 'descricão', 'descricao')
+
+        # 2. Definimos as duas únicas situações que estão "CORRETAS"
+        # Cenário A: O índice 1 é número E o índice 2 é alguma variação de descrição
+        sucesso_com_id = infos[1].isdecimal() and infos[2].lower() in variacoes_desc
+
+        # Cenário B: O índice 1 já é a própria palavra descrição
+        sucesso_direto = infos[1].lower() in variacoes_desc
+
+        # 3. O IF do erro: se passar de 4 elementos e NÃO for nenhum dos casos de sucesso...
+        if len(infos) > 4 and not (sucesso_com_id or sucesso_direto):
             print("Mais de 4 elementos na lista")
             print('Muitos argumentos e não é descrição')
             print('[Acabou função editar_bd]')
             return 'muitos_agrs'
-        elif len(infos) == 4 and ((not infos[1].isdecimal()) and (infos[1] not in ('descrição', 'descriçao', 'descricão', 'descricao',))):
+        elif len(infos) == 4 and ((not infos[1].isdecimal()) and (infos[1].lower() not in ('descrição', 'descriçao', 'descricão', 'descricao',))):
             print("4 elementos na lista")
             print('Muitos argumentos 2º elemento não é um Nº ou não é o tipo descrição')
             print('[Acabou função editar_bd]')
@@ -700,11 +760,14 @@ def tarefa(client: NewClient):
 
             confirmacao.close()
             sleep(120)
-        elif dia_da_semana in (0,1,2,3,): 
+        elif dia_da_semana in (0,1,2,3,) and hora_atual == "3:33": 
             confirmacao_envio.close()
+            sleep(60)
 
             confirmacao_envio_2 = open("confirmacao.txt", "w")
             confirmacao_envio_2.write("Sei lá, só precisava tirar o que tava")
+            confirmacao_envio_2.close()
+            sleep(60)
             
             confirmacao_envio = open("confirmacao.txt", "r")
 
@@ -910,3 +973,48 @@ def criar_cronograma():
         mensagem.append("Não a nenhum evento programado")
 
     return mensagem
+
+def separar_por_datas(texto_bruto):
+    # Expressão regular para achar o padrão DD/MM (ex: 20/06, 31/12)
+    # \b garante que estamos pegando a borda da data
+    padrao_data = r'\b\d{2}/\d{2}\b'
+    
+    # Encontra todas as datas e as posições (índices) delas no texto
+    ocorrencias = list(re.finditer(padrao_data, texto_bruto))
+    
+    if not ocorrencias:
+        print("⚠️ Nenhuma data válida foi encontrada no texto.")
+        return []
+        
+    blocos_finais = []
+    
+    # Percorre as ocorrências para fatiar o texto
+    for i in range(len(ocorrencias)):
+        inicio = ocorrencias[i].start()  # Onde a data atual começa
+        
+        # Se for a última data, vai até o final do texto
+        if i == len(ocorrencias) - 1:
+            fim = len(texto_bruto)
+        else:
+            # Se não for a última, vai até onde a PRÓXIMA data começa
+            fim = ocorrencias[i+1].start()
+            
+        # Fatia o texto usando os índices
+        trecho = texto_bruto[inicio:fim].strip()
+        
+        # Limpeza opcional: remove vírgulas ou quebras de linha que sobraram no final
+        trecho = trecho.rstrip(',\n ')
+        
+        blocos_finais.append(trecho)
+        
+    return blocos_finais
+
+# --- SEU TESTE REAL ---
+texto_exemplo = """20/06, prova, matematica, movimentação de teste
+20/06, trabalho, biologia 31/12, Teste, fisica, feliz ano novo"""
+
+resultado = separar_por_datas(texto_exemplo)
+
+# Exibindo o resultado para conferir
+for indice, bloco in enumerate(resultado, 1):
+    print(f"Bloco {indice}: {bloco}")

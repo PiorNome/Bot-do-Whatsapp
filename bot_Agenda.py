@@ -90,6 +90,11 @@ def on_message(client: NewClient, event: MessageEv):
     remetente_jid = event.Info.MessageSource.Chat
     numero = event.Info.MessageSource.Sender.User
 
+    if os.getenv("estado") == "TESTE" and numero != os.getenv("DONO_JID"):
+        client.send_message(remetente_jid, "No momento o bot está em manutenção")
+        client.send_message(remetente_jid, 'tente novamente mais tarde')
+        return
+
     bot = os.getenv("BOT")
 
     if str(numero) == bot:
