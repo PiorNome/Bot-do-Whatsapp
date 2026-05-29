@@ -240,9 +240,19 @@ def on_message(client: NewClient, event: MessageEv):
                 meses = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']
                 mes_atual = ""
                 data_antiga = ''
+                with open('constantes.json', 'r', encoding='utf-8') as f:
+                    MATERIAS:dict = json.load(f)
                 for infos in resultado[1]:
                     parte_mensagem_enviara = []
                     print(f'Informação sendo colocado na resposta: {infos}')
+                    
+                    if materia_emojis.get(infos[2]) is None:
+                        for materia_key in MATERIAS.keys():
+                            if infos[2].lower() in MATERIAS[materia_key]:
+                                materia = materia_key
+                                print(f"Encontro a matéria: {materia}")
+                                emoji = materia_emojis[materia]
+                                break
 
                     data = infos[1]
                     if mes_atual != meses[int(data[5:7])-1] and not resultado[0] in ('hoje','amanha','amanhã','semana', "proxima_semana"): # 2026-05-08
@@ -256,7 +266,7 @@ def on_message(client: NewClient, event: MessageEv):
                     if resultado[0] == 'listar':
                         parte_mensagem_enviara.append(f'🆔: {infos[0]}')
 
-                    parte_mensagem_enviara.append(f'- {infos[3]} - {infos[2]} {materia_emojis[infos[2]]}')
+                    parte_mensagem_enviara.append(f'- {infos[3]} - {materia} {emoji}')
 
                     resposta.extend(parte_mensagem_enviara)
                     if infos[4] != 'Vazio':
