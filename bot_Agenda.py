@@ -546,6 +546,9 @@ def on_message(client: NewClient, event: MessageEv):
 
     except Exception as e:
         client.send_message(remetente_jid, "Parece que aconteceu um erro interno")
+
+        with open("erros.txt", "a") as erros_txt:
+            erros_txt.write(e+"\n\n\n")
         print(f'ERROR: {e}')
 
 client.connect()
