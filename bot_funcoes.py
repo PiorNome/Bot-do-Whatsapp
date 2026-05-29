@@ -168,11 +168,6 @@ def decidir_destino(texto:str, numero_celular:str) -> tuple[str, any]:
         
         elif lista_strs[0] == "cronograma":
             comando = "cronograma"
-            amigo_JID = os.getenv("AMIGO_JID")
-            dono_jid = os.getenv("DONO_JID")
-            if not numero_celular == amigo_JID and not numero_celular == dono_jid:
-                print(f"O número {numero_celular} não é ADMIN")
-                return (comando, 'sem_permissão')
 
             eventos_pegos = criar_cronograma()
 
@@ -885,6 +880,17 @@ def criar_cronograma():
 
             data_atual = datetime.strptime(infos[1], "%Y-%m-%d")
 
+            if materia_emojis.get(infos[2]) is None:
+                for materia_key in MATERIAS.keys():
+                    if infos[2].lower() in MATERIAS[materia_key]:
+                        materia = materia_key
+                        print(f"Encontro a matéria: {materia}")
+                        emoji = materia_emojis[materia]
+                        break
+            else:
+                emoji = materia_emojis[infos[2]]
+                materia = infos[2]
+
             if data_atual.date() <= sabado.date():
                 if not f'📍 *ESSA SEMANA* ({domingo.strftime("%d/%m")} - {sabado.strftime("%d/%m")}):\n' in mensagem:
                     mensagem.append(f'📍 *ESSA SEMANA* ({domingo.strftime("%d/%m")} - {sabado.strftime("%d/%m")}):\n')
@@ -895,7 +901,7 @@ def criar_cronograma():
                     parte_mensagem_enviara.append(f'### {data_atual.strftime("%d/%m")}')
 
 
-                parte_mensagem_enviara.append(f'- {infos[3]} - {infos[2]} {materia_emojis[infos[2]]}')
+                parte_mensagem_enviara.append(f'- {infos[3]} - {materia} {emoji}')
 
                 mensagem.extend(parte_mensagem_enviara)
                 if infos[4] != 'Vazio':
@@ -916,17 +922,6 @@ def criar_cronograma():
                     primeira = False
                     data_antiga = datetime.strptime(data_atual.strftime('%d/%m/%Y'), '%d/%m/%Y')
                     parte_mensagem_enviara.append(f'### {data_atual.strftime("%d/%m")}')
-
-                if materia_emojis.get(infos[2]) is None:
-                    for materia_key in MATERIAS.keys():
-                        if infos[2].lower() in MATERIAS[materia_key]:
-                            materia = materia_key
-                            print(f"Encontro a matéria: {materia}")
-                            emoji = materia_emojis[materia]
-                            break
-                else:
-                    emoji = materia_emojis[infos[2]]
-                    materia = infos[2]
 
                 parte_mensagem_enviara.append(f'{infos[3]} - {materia} {emoji} ')
 
@@ -951,17 +946,6 @@ def criar_cronograma():
                     primeira_barra = True
                 if not f"📅 *{meses[int(data_atual.strftime('%m'))-1]}*" in mensagem:
                     mensagem.append(f"📅 *{meses[int(data_atual.strftime('%m'))-1]}*")
-
-                if materia_emojis.get(infos[2]) is None:
-                    for materia_key in MATERIAS.keys():
-                        if infos[2].lower() in MATERIAS[materia_key]:
-                            materia = materia_key
-                            print(f"Encontro a matéria: {materia}")
-                            emoji = materia_emojis[materia]
-                            break
-                else:
-                    emoji = materia_emojis[infos[2]]
-                    materia = infos[2]
                 
                 parte_mensagem_enviara.append(f'{emoji} {data_atual.strftime("%d/%m")} {infos[3]} - {materia}')
 
