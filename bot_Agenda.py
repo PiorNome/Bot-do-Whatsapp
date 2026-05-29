@@ -253,6 +253,9 @@ def on_message(client: NewClient, event: MessageEv):
                                 print(f"Encontro a matéria: {materia}")
                                 emoji = materia_emojis[materia]
                                 break
+                    else:
+                        emoji = materia_emojis[infos[2]]
+                        materia = infos[2]
 
                     data = infos[1]
                     if mes_atual != meses[int(data[5:7])-1] and not resultado[0] in ('hoje','amanha','amanhã','semana', "proxima_semana"): # 2026-05-08
