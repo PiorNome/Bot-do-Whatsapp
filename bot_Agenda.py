@@ -200,7 +200,7 @@ def on_message(client: NewClient, event: MessageEv):
                         resposta.append('Não foi possivel agendar o evento por falta de informações')
                         resposta.append('*Como Usar o comando*:')
                         resposta.append("   agendar [data] , [tipo] , [materia] , [descrição(opcinal)]")
-                        resposta.append('―――――――――――――――――――――――')
+                        resposta.append('―――――――――――――――――――――')
                         resposta.append("Dica:")
                         resposta.append("   Use \"tutorial agendar\" para obter mais informações")
                     
@@ -227,9 +227,9 @@ def on_message(client: NewClient, event: MessageEv):
             resposta.append("   proximo mes")
             resposta.append("   mes que vem")
             resposta.append("   tutorial")
-            resposta.append('―――――――――――――――――――――――')
+            resposta.append('―――――――――――――――――――――')
             resposta.append("obs: Não coloque as informações dentro de colchetes")
-            resposta.append('―――――――――――――――――――――――')
+            resposta.append('―――――――――――――――――――――')
             resposta.append("Dica:")
             resposta.append("   Se você usar \"tutorial [comando]\", você irar ver um tutorial mais completo do comando especificado")
 
@@ -345,10 +345,10 @@ def on_message(client: NewClient, event: MessageEv):
                 resposta.append("   proximo mes")
                 resposta.append("   mes que vem")
                 resposta.append("   tutorial")
-                resposta.append('―――――――――――――――――――――――')
+                resposta.append('―――――――――――――――――――――')
                 resposta.append('Dica: ')
                 resposta.append('   Você pode usar "*tutorial [comando]*" para saber mais sobre um comando especificado')
-                resposta.append('―――――――――――――――――――――――')
+                resposta.append('―――――――――――――――――――――')
                 resposta.append("obs: Não coloque as informações dentro de colchetes")
             
             elif resultado[1] == 'nao_encontrado':
@@ -370,9 +370,9 @@ def on_message(client: NewClient, event: MessageEv):
                 resposta.append("   proximo mes")
                 resposta.append("   mes que vem")
                 resposta.append("   tutorial")
-                resposta.append('―――――――――――――――――――――――')
+                resposta.append('―――――――――――――――――――――')
                 resposta.append("obs: Não coloque as informações dentro de colchetes")
-                resposta.append('―――――――――――――――――――――――')
+                resposta.append('―――――――――――――――――――――')
                 resposta.append("Dica:")
                 resposta.append("   Se você usar \"tutorial [comando]\", você irar ver um tutorial mais completo do comando especificado")
 
@@ -382,7 +382,7 @@ def on_message(client: NewClient, event: MessageEv):
                     resposta.append("Para usar o comando *agendar* você precisa ser *ADMIN*")
                     resposta.append("*Como usar?*")
                     resposta.append("   agendar [data] , [tipo] , [materia] , [descrição(opcinal)]")
-                    resposta.append("―――――――――――――――――――――――")
+                    resposta.append("―――――――――――――――――――――")
                     resposta.append("Dicas: ")
                     resposta.append("   Na *data* escreva dessa forma *DD/MM*, *DD/MM/YY* ou *DD/MM/YYYY*")
                     resposta.append("   Na *matéria*, é aceito alguns erros de escrita, como faltar um acento em algumas letras")
@@ -396,7 +396,7 @@ def on_message(client: NewClient, event: MessageEv):
                     resposta.append('')
                     resposta.append("*Como usar?*")
                     resposta.append("   listar")
-                    resposta.append("―――――――――――――――――――――――")
+                    resposta.append("―――――――――――――――――――――")
                     resposta.append("obs: Para usar você realmente só escreve \"listar\"")
                     
 
@@ -404,30 +404,30 @@ def on_message(client: NewClient, event: MessageEv):
                     resposta.append("Com o comando *status* você vê *tudo* o que está por vir")
                     resposta.append("*Como usar?*")
                     resposta.append("   status")
-                    resposta.append("―――――――――――――――――――――――")
+                    resposta.append("―――――――――――――――――――――")
                     resposta.append("obs: Para usar você realmente só escreve \"Status\"")
 
                 elif resultado[1] == 'hoje':
                     resposta.append("Com o comando *hoje* você vê *tudo* que vai ter *hoje*")
                     resposta.append("*Como usar?*")
                     resposta.append("   hoje")
-                    resposta.append("―――――――――――――――――――――――")
+                    resposta.append("―――――――――――――――――――――")
                     resposta.append("obs: Para usar você realmente só escreve \"Hoje\"")
 
                 elif resultado[1] == 'amanha' or resultado[1] == 'amanhã':
                     resposta.append("Com o comando *amanha* você vê *tudo* que vai ter *amanhã*")
                     resposta.append("*Como usar?*")
                     resposta.append("   amanha")
-                    resposta.append("―――――――――――――――――――――――")
+                    resposta.append("―――――――――――――――――――――")
                     resposta.append("Dica: É aceito *amanha* ou *amanhã*")
-                    resposta.append("―――――――――――――――――――――――")
+                    resposta.append("―――――――――――――――――――――")
                     resposta.append("obs: Para usar você realmente só escreve \"Amanhã\"")
 
                 elif resultado[1] == 'semana':
                     resposta.append("Com o comando *semana* você vê *tudo* que vai nessa *semana*")
                     resposta.append("*Como usar?*")
                     resposta.append("   semana")
-                    resposta.append("―――――――――――――――――――――――")
+                    resposta.append("―――――――――――――――――――――")
                     resposta.append("obs: Para usar você realmente só escreve \"Semana\"")
 
                 elif resultado[1] == 'editar':
@@ -436,7 +436,7 @@ def on_message(client: NewClient, event: MessageEv):
                     resposta.append("")
                     resposta.append("*Como usar?*")
                     resposta.append("   editar [ID] , [campo] , [valor]")
-                    resposta.append("―――――――――――――――――――――――")
+                    resposta.append("―――――――――――――――――――――")
                     resposta.append("Dica:")
                     resposta.append("   Use o comando *\"listar\"* para saber o ID do evento")
                     resposta.append("   No *campo*, você escreve o que você quer mudar, pode-ser data, matéria, tipo ou descrição")
@@ -449,7 +449,7 @@ def on_message(client: NewClient, event: MessageEv):
                     resposta.append("*Como usar?*")
                     resposta.append("   tutorial")
                     resposta.append("   tutorial [comando]")
-                    resposta.append("―――――――――――――――――――――――")
+                    resposta.append("―――――――――――――――――――――")
                     resposta.append("Dica:")
                     resposta.append("   Se você usar só \"*tutorial*\", você irar ver um tutorial basico de cada comando")
                     resposta.append("   Se você usar \"tutorial [comando]\", você irar ver um tutorial mais completo do comando especificado")
@@ -459,7 +459,7 @@ def on_message(client: NewClient, event: MessageEv):
                     resposta.append("Com o comando *deletar* você pode apagar um evento")
                     resposta.append("*Como usar?*")
                     resposta.append("   deletar [id]")
-                    resposta.append("―――――――――――――――――――――――")
+                    resposta.append("―――――――――――――――――――――")
                     resposta.append("Dica:")
                     resposta.append("   Use o comando \"listar\" para saber o id dos eventos")
                 
@@ -467,28 +467,28 @@ def on_message(client: NewClient, event: MessageEv):
                     resposta.append("Com o comando *mes que vem* você pode ver tudo que vai ter nos proximos meses")
                     resposta.append("*Como usar?*")
                     resposta.append("   mes que vem")
-                    resposta.append("―――――――――――――――――――――――")
+                    resposta.append("―――――――――――――――――――――")
                     resposta.append("obs: Para usar você realmente só escreve \"mes que vem\"")
                 
                 elif resultado[1] == 'proximo_mes':
                     resposta.append("Com o comando *proximo mes* você pode ver tudo que vai ter nos proximos meses")
                     resposta.append("*Como usar?*")
                     resposta.append("   proximo mes")
-                    resposta.append("―――――――――――――――――――――――")
+                    resposta.append("―――――――――――――――――――――")
                     resposta.append("obs: Para usar você realmente só escreve \"proximo mes\"")
 
                 elif resultado[1] == 'mes':
                     resposta.append("Com o comando *mes* você pode ver tudo que vai ter nesse mês")
                     resposta.append("*Como usar?*")
                     resposta.append("   mes")
-                    resposta.append("―――――――――――――――――――――――")
+                    resposta.append("―――――――――――――――――――――")
                     resposta.append("obs: Para usar você realmente só escreve \"mes\"")
                 
                 elif resultado[1] == "proxima_semana":
                     resposta.append("Com o comando *proxima semana* você pode ver tudo que vai ter na próxima semana")
                     resposta.append("*Como usar?*")
                     resposta.append("   proxima semana")
-                    resposta.append("―――――――――――――――――――――――")
+                    resposta.append("―――――――――――――――――――――")
                     resposta.append("obs: Para usar você realmente só escreve \"proxima semana\"")
         
         elif resultado[0] == 'deletar':

@@ -726,7 +726,9 @@ def eventos_proximo_mes(ano_mes:str):
         print("Conexão feita")
         curso = conexao.cursor()
         curso.execute(
-            '''SELECT * FROM eventos WHERE data_evento >= ?''', (ano_mes,)
+            '''SELECT * FROM eventos 
+            WHERE data_evento >= ?
+            ORDER BY data_evento ASC, materia ASC;''', (ano_mes,)
         )
         eventos = curso.fetchall()
         print(f"SQL retornou: {eventos}")
@@ -899,7 +901,7 @@ def criar_cronograma():
                 if infos[4] != 'Vazio':
                     descricao = infos[4].replace('\n', '\n> ')
                     mensagem.append(f'> {descricao}')
-                mensagem.append("> ___")
+                mensagem.append("> _ _ _ _ _ _ _")
 
             elif data_atual.date() <= fim_proxima.date():
                 if not f'📍 *ESSA SEMANA* ({domingo.strftime("%d/%m")} - {sabado.strftime("%d/%m")}):\n' in mensagem:
@@ -932,7 +934,7 @@ def criar_cronograma():
                 if infos[4] != 'Vazio':
                     descricao = infos[4].replace('\n', '\n> ')
                     mensagem.append(f'> {descricao}')
-                mensagem.append("> ___")
+                mensagem.append("> _ _ _ _ _ _ _")
             
             else:
                 if not f'📍 *ESSA SEMANA* ({domingo.strftime("%d/%m")} - {sabado.strftime("%d/%m")}):\n' in mensagem:
@@ -945,7 +947,7 @@ def criar_cronograma():
 
                 if not primeira_barra:
                     mensagem.append("\n━━━━━━━━━━━━━━━━")
-                    mensagem.append("> _________")
+                    mensagem.append("> _ _ _")
                     primeira_barra = True
                 if not f"📅 *{meses[int(data_atual.strftime('%m'))-1]}*" in mensagem:
                     mensagem.append(f"📅 *{meses[int(data_atual.strftime('%m'))-1]}*")
@@ -967,7 +969,7 @@ def criar_cronograma():
                 if infos[4] != 'Vazio':
                     descricao = infos[4].replace('\n', '\n> ')
                     mensagem.append(f'> {descricao}')
-                mensagem.append("> _________")
+                mensagem.append("> _ _ _")
 
     else:
         mensagem.append("Não a nenhum evento programado")
