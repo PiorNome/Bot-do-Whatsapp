@@ -901,7 +901,7 @@ def criar_cronograma():
                 if infos[4] != 'Vazio':
                     descricao = infos[4].replace('\n', '\n> ')
                     mensagem.append(f'> {descricao}')
-                mensagem.append("> _ _ _ _ _ _ _")
+                mensagem.append("> _______")
 
             elif data_atual.date() <= fim_proxima.date():
                 if not f'📍 *ESSA SEMANA* ({domingo.strftime("%d/%m")} - {sabado.strftime("%d/%m")}):\n' in mensagem:
@@ -934,7 +934,7 @@ def criar_cronograma():
                 if infos[4] != 'Vazio':
                     descricao = infos[4].replace('\n', '\n> ')
                     mensagem.append(f'> {descricao}')
-                mensagem.append("> _ _ _ _ _ _ _")
+                mensagem.append("> _______")
             
             else:
                 if not f'📍 *ESSA SEMANA* ({domingo.strftime("%d/%m")} - {sabado.strftime("%d/%m")}):\n' in mensagem:
@@ -947,7 +947,7 @@ def criar_cronograma():
 
                 if not primeira_barra:
                     mensagem.append("\n━━━━━━━━━━━━━━━━")
-                    mensagem.append("> _ _ _")
+                    mensagem.append("> ___")
                     primeira_barra = True
                 if not f"📅 *{meses[int(data_atual.strftime('%m'))-1]}*" in mensagem:
                     mensagem.append(f"📅 *{meses[int(data_atual.strftime('%m'))-1]}*")
@@ -969,7 +969,7 @@ def criar_cronograma():
                 if infos[4] != 'Vazio':
                     descricao = infos[4].replace('\n', '\n> ')
                     mensagem.append(f'> {descricao}')
-                mensagem.append("> _ _ _")
+                mensagem.append("> ___")
 
     else:
         mensagem.append("Não a nenhum evento programado")
