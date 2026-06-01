@@ -10,7 +10,7 @@ load_dotenv()
 def decidir_destino(texto:str, numero_celular:str) -> tuple[str, any]:
     print(f"[Função: decidir_destino]")
     print(f"Recebeu {texto}")
-    comandos = ['agendar', 'status', 'hoje', 'amanha', 'amanhã', 'tutorial', 'editar', 'semana', 'listar', 'deletar', 'mês', 'mes', 'cronograma']
+    comandos = ['agendar', 'status', 'hoje', 'amanha', 'amanhã', 'tutorial', 'editar', 'excluir', 'semana', 'listar', 'deletar', 'apagar', 'del', 'mês', 'mes', 'cronograma']
     lista_strs = texto.lower().split()
     numeros = os.getenv('REPRESENTATES')
     REPRESENTATES = numeros.split(' , ')
@@ -150,7 +150,7 @@ def decidir_destino(texto:str, numero_celular:str) -> tuple[str, any]:
             print('[Acabou a função decidir_destino]')
             return (comando, eventos_pegos)
         
-        elif lista_strs[0] == 'deletar':
+        elif lista_strs[0] == 'deletar' or lista_strs[0] == 'excluir' or lista_strs[0] == 'apagar' or lista_strs[0] == 'del':
             comando = 'deletar'
 
             if not numero_celular in REPRESENTATES:
@@ -696,6 +696,8 @@ def editar_bd(texto:str):
 def comando_deletar(id:str) -> int:
     print("[Função comando_deletar]")
     try:
+        if not id.isdecimal():
+            return 'tipo_errado'
         conexao = sqlite3.connect("cronograma.db")
         curso = conexao.cursor()
 

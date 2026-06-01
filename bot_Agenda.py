@@ -516,6 +516,9 @@ def on_message(client: NewClient, event: MessageEv):
                 resposta.append("Evento apagado da face da terra com sucesso")
             elif resultado[1] >= 2:
                 resposta.append("Aparentemente ouve um erro e apaguei mais de um evento.")
+            elif resultado[1] == 'tipo_errado':
+                resposta.append("Não aceito nada além de números")
+                resposta.append("use dessa forma \"deletar [id]\"")
 
         elif resultado[0] == "cronograma":
             if resultado[1] == 'sem_permissão':
