@@ -744,7 +744,8 @@ def tarefa(client: NewClient):
         dia_da_semana = agora.weekday()  # Segunda=0, Sexta=4
         hora_atual = agora.strftime("%H:%M")
         confirmacao_envio = open("confirmacao.txt", "r")
-        if ((dia_da_semana == 4 and hora_atual == "11:30") or (dia_da_semana == 5 and hora_atual == "13:00") or (dia_da_semana == 6 and hora_atual == "13:00")) and not "enviado" in confirmacao_envio.read().lower():
+        confirmacao_texto = confirmacao_envio.read()
+        if ((dia_da_semana == 4 and hora_atual == "11:30") or (dia_da_semana == 5 and hora_atual == "13:00") or (dia_da_semana == 6 and hora_atual == "13:00")) and not confirmacao_texto.lower() == "enviado":
             amigo = build_jid(os.getenv("AMIGO"))
             
             mensagem = criar_cronograma()
