@@ -289,10 +289,57 @@ def adicionar_bd(texto:str) -> tuple[int]:
     informacoes = texto.split(",")
     print(f"Separou as informações")
     qntd = len(informacoes) # A quantidade de partes que tem
+
+    if qntd >= 2:
+        data = informacoes[0].strip()
+        tipo = informacoes[1].strip()
+        if tipo.lower() in ("férias", "ferias", "feriadão", "feriadao",):
+            tipo = "Férias"
+            formatos = ("%d/%m/%y", "%d/%m/%Y", "%d/%m")
+            try:
+                print(f"Data colocada pelo usuario: {data}")
+                data_objeto = datetime.strptime(data, formatos[0])
+                print("Data valida")
+            except:
+                try:
+                    data_objeto = datetime.strptime(data, formatos[1])
+                    print("Data valida")
+                except:
+                    try:
+                        data_objeto = datetime.strptime(data, formatos[2])
+                        data_objeto = data_objeto.replace(year=2026)
+                        print("Data valida")
+                    except:
+                        print("Data invalida")
+                        retorna[0] = 1
+            
+            if not 1 in retorna:
+                print("Salvando no Banco de Dados")
+                sql = "INSERT INTO eventos(data_evento, materia, tipo, descricao) VALUES (?, ?, ?, ?)"
+                valores = (data_objeto.date(), "Vazio", tipo.title(), "Vazio")
+                conexao = sqlite3.connect('cronograma.db')
+                curso = conexao.cursor()
+                curso.execute(sql, valores)
+                print("Salvou no Banco de Dados")
+                conexao.commit()
+            print("[Acabou a função adicionar_bd]")
+            return tuple(retorna)
+
     if qntd >= 3:
         data = informacoes[0].strip()
         tipo = informacoes[1].strip()
         materia = informacoes[2].strip()
+
+        encontrou_materia = False
+        for materia_key in MATERIAS.keys():
+            if materia.lower() in MATERIAS[materia_key]:
+                materia = materia_key
+                encontrou_materia = True
+                print(f"Encontro a matéria: {materia}")
+                break
+        if not encontrou_materia:
+            print("Não encontrou a matéria")
+            retorna[1] = 1
 
         descricao = 'Vazio'
         if qntd > 3:
@@ -321,17 +368,6 @@ def adicionar_bd(texto:str) -> tuple[int]:
                     print("Data invalida")
                     retorna[0] = 1
         
-        encontrou_materia = False
-        for materia_key in MATERIAS.keys():
-            if materia.lower() in MATERIAS[materia_key]:
-                materia = materia_key
-                encontrou_materia = True
-                print(f"Encontro a matéria: {materia}")
-                break
-        if not encontrou_materia:
-            print("Não encontrou a matéria")
-            retorna[1] = 1
-        
 
         if not 1 in retorna:
             print("Salvando no Banco de Dados")
@@ -344,6 +380,7 @@ def adicionar_bd(texto:str) -> tuple[int]:
             conexao.commit()
         print("[Acabou a função adicionar_bd]")
         return tuple(retorna)
+
     print("Por falta de argumentos, será retornado (-1)")
     print("[Acabou a função adicionar_bd]")
     return (-1,)
@@ -883,16 +920,20 @@ def criar_cronograma():
 
             data_atual = datetime.strptime(infos[1], "%Y-%m-%d")
 
-            if materia_emojis.get(infos[2]) is None:
-                for materia_key in MATERIAS.keys():
-                    if infos[2].lower() in MATERIAS[materia_key]:
-                        materia = materia_key
-                        print(f"Encontro a matéria: {materia}")
-                        emoji = materia_emojis[materia]
-                        break
+            if infos[2] != 'Vazio':
+                if materia_emojis.get(infos[2]) is None:
+                    for materia_key in MATERIAS.keys():
+                        if infos[2].lower() in MATERIAS[materia_key]:
+                            materia = materia_key
+                            print(f"Encontro a matéria: {materia}")
+                            emoji = materia_emojis[materia]
+                            break
+                else:
+                    emoji = materia_emojis[infos[2]]
+                    materia = infos[2]
             else:
-                emoji = materia_emojis[infos[2]]
-                materia = infos[2]
+                materia = ''
+                emoji = materia_emojis[infos[3]]
 
             if data_atual.date() <= sabado.date():
                 if not f'📍 *ESSA SEMANA* ({domingo.strftime("%d/%m")} - {sabado.strftime("%d/%m")}):\n' in mensagem:
@@ -964,9 +1005,8 @@ def criar_cronograma():
     return mensagem
 
 def separar_por_datas(texto_bruto):
-    # Expressão regular para achar o padrão DD/MM (ex: 20/06, 31/12)
-    # \b garante que estamos pegando a borda da data
-    padrao_data = r'\b\d{2}/\d{2}\b'
+    # O padrão agora aceita 1 ou 2 dígitos tanto para o dia quanto para o mês
+    padrao_data = r'\b\d{1,2}/\d{1,2}\b'
     
     # Encontra todas as datas e as posições (índices) delas no texto
     ocorrencias = list(re.finditer(padrao_data, texto_bruto))
@@ -977,7 +1017,6 @@ def separar_por_datas(texto_bruto):
         
     blocos_finais = []
     
-    # Percorre as ocorrências para fatiar o texto
     for i in range(len(ocorrencias)):
         inicio = ocorrencias[i].start()  # Onde a data atual começa
         
@@ -991,19 +1030,9 @@ def separar_por_datas(texto_bruto):
         # Fatia o texto usando os índices
         trecho = texto_bruto[inicio:fim].strip()
         
-        # Limpeza opcional: remove vírgulas ou quebras de linha que sobraram no final
+        # Limpa vírgulas, quebras de linha ou espaços que sobraram no fim do bloco
         trecho = trecho.rstrip(',\n ')
         
         blocos_finais.append(trecho)
         
     return blocos_finais
-
-# --- SEU TESTE REAL ---
-texto_exemplo = """20/06, prova, matematica, movimentação de teste
-20/06, trabalho, biologia 31/12, Teste, fisica, feliz ano novo"""
-
-resultado = separar_por_datas(texto_exemplo)
-
-# Exibindo o resultado para conferir
-for indice, bloco in enumerate(resultado, 1):
-    print(f"Bloco {indice}: {bloco}")

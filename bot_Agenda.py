@@ -155,6 +155,9 @@ def on_message(client: NewClient, event: MessageEv):
         
         else:
             executou_if = False
+            with open("confirmacao.txt", "w", encoding="utf-8") as desconfirmacao:
+                desconfirmacao.write("Sei lá, só precisava tirar o que tava")
+            desconfirmacao.close()
         
         if executou_if:
             with open("confirmacao.txt", "w", encoding="utf-8") as desconfirmacao:
@@ -246,16 +249,25 @@ def on_message(client: NewClient, event: MessageEv):
                     parte_mensagem_enviara = []
                     print(f'Informação sendo colocado na resposta: {infos}')
                     
-                    if materia_emojis.get(infos[2]) is None:
-                        for materia_key in MATERIAS.keys():
-                            if infos[2].lower() in MATERIAS[materia_key]:
-                                materia = materia_key
-                                print(f"Encontro a matéria: {materia}")
-                                emoji = materia_emojis[materia]
-                                break
+                    if infos[2] != "Vazio":
+                        print("Não é infos[2] não é Vazio")
+                        if materia_emojis.get(infos[2]) is None:
+                            print("Não tem emoji")
+                            for materia_key in MATERIAS.keys():
+                                if infos[2].lower() in MATERIAS[materia_key]:
+                                    materia = materia_key
+                                    print(f"Encontro a matéria: {materia}")
+                                    emoji = materia_emojis[materia]
+                                    print("Emoji encontrado")
+                                    break
+                        else:
+                            print("Tem emoji")
+                            emoji = materia_emojis[infos[2]]
+                            materia = infos[2]
                     else:
-                        emoji = materia_emojis[infos[2]]
-                        materia = infos[2]
+                        print("É infos[2] é Vazio")
+                        materia = ''
+                        emoji = materia_emojis[infos[3]]
 
                     data = infos[1]
                     if mes_atual != meses[int(data[5:7])-1] and not resultado[0] in ('hoje','amanha','amanhã','semana', "proxima_semana"): # 2026-05-08
