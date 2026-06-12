@@ -998,7 +998,7 @@ def criar_cronograma():
                     mensagem.append("\n━━━━━━━━━━━━━━━━")
                     mensagem.append("> ___")
                     primeira_barra = True
-                if not f"📅 *{meses[int(data_atual.strftime('%m'))-1]}*" in mensagem:
+                if not f"# 📅 *{meses[int(data_atual.strftime('%m'))-1]}*" in mensagem:
                     mensagem.append(f"📅 *{meses[int(data_atual.strftime('%m'))-1]}*")
                 
                 parte_mensagem_enviara.append(f'{emoji} {data_atual.strftime("%d/%m")} {infos[3]} - {materia}')
@@ -1007,7 +1007,11 @@ def criar_cronograma():
                 if infos[4] != 'Vazio':
                     descricao = infos[4].replace('\n', '\n> ')
                     mensagem.append(f'> {descricao}')
-                mensagem.append("> ___")
+                
+                if infos == eventos_pegos[-1]:
+                    mensagem.append("> ___")
+                else:
+                    mensagem.append("> _________")
 
     else:
         mensagem.append("Não a nenhum evento programado")

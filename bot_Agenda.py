@@ -204,29 +204,8 @@ def on_message(client: NewClient, event: MessageEv):
                     resposta.append("\n━━━━━━━━━━━━━━━━━\n")
 
         elif resultado[0] == 'Najudar':
-            resposta.append('Não entendi o comando usado!')
-            resposta.append('Aqui vão os comandos que temos, e como usa-los.')
-            resposta.append("")
-
-            if numero in representates:
-                resposta.append("   agendar [data] , [tipo] , [materia] , [descrição(opcinal)]")
-                resposta.append("   editar [id] , [o campo que você que mudar] , [o valor que você quer]")
-                resposta.append("   listar")
-                resposta.append("   deletar [id]")
-
-            resposta.append("   status")
-            resposta.append("   hoje")
-            resposta.append("   amanha")
-            resposta.append("   semana")
-            resposta.append("   proximo mes")
-            resposta.append("   mes que vem")
-            resposta.append("   tutorial")
-            resposta.append('―――――――――――――――――――――')
-            resposta.append("obs: Não coloque as informações dentro de colchetes")
-            resposta.append('―――――――――――――――――――――')
-            resposta.append("Dica:")
-            resposta.append("   Se você usar \"tutorial [comando]\", você irar ver um tutorial mais completo do comando especificado")
-
+            resposta.append("Não entendi o comando usado")
+            resposta.append("Por favor, use o comando \"tutorial\" para saber mais")
 
         elif resultado[0] == 'status' or resultado[0] == 'hoje' or resultado[0] == 'amanha' or resultado[0] == 'amanhã' or resultado[0] == 'semana' or resultado[0] == 'listar' or resultado[0] == 'proximo_mes' or resultado[0] == 'proxima_semana' or resultado[0] == 'mes':
             if resultado[1]: # Resultado[1] = (ID, Data, Matéria, Tipo, Descrição)
