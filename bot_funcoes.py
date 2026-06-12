@@ -996,10 +996,10 @@ def criar_cronograma():
 
                 if not primeira_barra:
                     mensagem.append("\n━━━━━━━━━━━━━━━━")
-                    mensagem.append("> ___")
                     primeira_barra = True
                 if not f"# 📅 *{meses[int(data_atual.strftime('%m'))-1]}*" in mensagem:
                     mensagem.append(f"# 📅 *{meses[int(data_atual.strftime('%m'))-1]}*")
+                    mensagem.append("> ___")
                 
                 parte_mensagem_enviara.append(f'{emoji} {data_atual.strftime("%d/%m")} {infos[3]} - {materia}')
 
