@@ -775,40 +775,50 @@ def eventos_proximo_mes(ano_mes:str):
     print("[Acabou função eventos_proximo_mes]")
     return eventos
 
-def tarefa(client: NewClient):
+def tarefa(client):
     while True:
         agora = datetime.now()
         dia_da_semana = agora.weekday()  # Segunda=0, Sexta=4
         hora_atual = agora.strftime("%H:%M")
-        confirmacao_envio = open("confirmacao.txt", "r")
-        confirmacao_texto = confirmacao_envio.read()
-        if ((dia_da_semana == 4 and hora_atual == "11:30") or (dia_da_semana == 5 and hora_atual == "13:00") or (dia_da_semana == 6 and hora_atual == "13:00")) and not confirmacao_texto.lower() == "enviado":
-            amigo = build_jid(os.getenv("AMIGO"))
-            
-            mensagem = criar_cronograma()
 
+        # 1. Lendo o arquivo com encoding e limpando espaços/quebras de linha
+        try:
+            with open("confirmacao.txt", "r", encoding="utf-8") as confirmacao_envio:
+                # O .strip() remove espaços vazios e \n das bordas
+                confirmacao_texto = confirmacao_envio.read().strip() 
+        except FileNotFoundError:
+            confirmacao_texto = "" # Se o arquivo não existir na 1ª vez, não quebra o bot
+
+        # 2. Verificação principal
+        if ((dia_da_semana == 4 and hora_atual == "11:30") or \
+            (dia_da_semana == 5 and hora_atual == "13:00") or \
+            (dia_da_semana == 6 and hora_atual == "13:00")) and \
+            (confirmacao_texto.lower() != "enviado"):
+            
+            amigo = build_jid(os.getenv("AMIGO"))
+            mensagem = criar_cronograma()
             mensagem_final = '\n'.join(mensagem)
 
             client.send_message(amigo, mensagem_final)
             sleep(1.5)
             client.send_message(amigo, "Posso enviar?\nSe você quiser mandar uma mensagem no final, escreva assim: sim, [mensagem que você quer]")
+            
+            # 3. O 'with open' já fecha o arquivo sozinho no final do bloco
             with open("confirmacao.txt", "w", encoding="utf-8") as confirmacao:
                 confirmacao.write(f"{datetime.now().strftime('%d/%m/%Y')}")
 
-            confirmacao.close()
             sleep(120)
-        elif dia_da_semana in (0,1,2,3,) and hora_atual == "3:33": 
-            confirmacao_envio.close()
+
+        # 4. O reset de Segunda a Quinta
+        elif dia_da_semana in (0, 1, 2, 3) and hora_atual == "12:00": 
             sleep(60)
 
-            confirmacao_envio_2 = open("confirmacao.txt", "w")
-            confirmacao_envio_2.write("Sei lá, só precisava tirar o que tava")
-            confirmacao_envio_2.close()
-            sleep(60)
+            # Usando 'with open' aqui também por segurança
+            with open("confirmacao.txt", "w", encoding="utf-8") as confirmacao_finalizacao:
+                confirmacao_finalizacao.write("Sei lá, só precisava tirar o que tava")
             
-            confirmacao_envio = open("confirmacao.txt", "r")
+            sleep(60)
 
-        confirmacao_envio.close()
         sleep(20)
 
 def exclucao_atutomatica():

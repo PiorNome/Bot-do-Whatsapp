@@ -78,12 +78,11 @@ def on_message(client: NewClient, event: MessageEv):
     texto = event.Message.conversation or event.Message.extendedTextMessage.text or ""
     if not texto:
         return 
-    
+
     # 3. Proteção contra o Status (Ignora mensagens que vem do Status)
     if event.Info.MessageSource.Chat.Server in ["broadcast", "g.us", "newsletter"]:
         print(event.Info.MessageSource.Chat)
         return
-
 
     resposta = []
     # remetente_jid já é o objeto que o WhatsApp precisa para responder
@@ -111,11 +110,9 @@ def on_message(client: NewClient, event: MessageEv):
     # encoding='utf-8' = garante que acentos e emojis não deem erro
     with open("logs_mensagens.txt", "a", encoding="utf-8") as arquivo:
         arquivo.write(f"[{agora}]\nUser: {event.Info.MessageSource.Chat.User}\nServer: {event.Info.MessageSource.Chat.Server}\nMensagem: {texto}\n-----------------------------\n")
-        arquivo.close()
 
     with open("confirmacao.txt", "r", encoding="utf-8") as confirmacao:
         enviar = confirmacao.read()
-        confirmacao.close()
     
     amigo_jid = os.getenv("AMIGO_JID")
     print(f"Número: {numero}\nAmigo: {amigo_jid}")
@@ -128,7 +125,6 @@ def on_message(client: NewClient, event: MessageEv):
         lista_strgs = texto.split(",")
         print(f"lista_strngs: {lista_strgs}")
 
-        executou_if = True
         if lista_strgs[0].lower() in ["s","si","sm","sim","yes","y", "pode", "sin"]:
             client.send_message(remetente_jid, "Cronocrama Sendo enviado...")
             comunidade = build_jid(os.getenv("GRUPO_COMUNIDADE_TESTE"), "g.us")
@@ -143,29 +139,24 @@ def on_message(client: NewClient, event: MessageEv):
 
             client.send_message(remetente_jid, "Cronograma Enviado")
 
-            confirmacao = open("confirmacao.txt", "w")
-            confirmacao.write("enviado")
-            confirmacao.close()
+            with open("confirmacao.txt", "w", encoding="utf-8") as confirmacao:
+                confirmacao.write("enviado")
+            return
 
         elif lista_strgs[0].lower() in ['nao', 'não', 'n', 'no', 'negativo', "talvez", 'pq']:
             if dia_semana in (4,5,):
                 client.send_message(remetente_jid, "Vou perguntar denovo amanhã")
             else:
                 client.send_message(remetente_jid, "Então o envio terá que ser manual")
+
+            with open("confirmacao.txt", "w", encoding="utf-8") as desconfirmacao:
+                desconfirmacao.write("Sei lá, só precisava tirar o que tava")
+            return
         
         else:
-            executou_if = False
             with open("confirmacao.txt", "w", encoding="utf-8") as desconfirmacao:
                 desconfirmacao.write("Sei lá, só precisava tirar o que tava")
-            desconfirmacao.close()
-        
-        if executou_if:
-            with open("confirmacao.txt", "w", encoding="utf-8") as desconfirmacao:
-                desconfirmacao.write("Sei lá, só precisava tirar o que tava")
-            desconfirmacao.close()
-            return
-    
-    
+
     try:
         print(f'Pessoa mandou: {texto}')
         
@@ -566,11 +557,18 @@ def on_message(client: NewClient, event: MessageEv):
 
         if random.randint(1, 100) <= 20 and mandar_fig:
             print("Uma figurinha vai ser mandada")
-            figurinha_escolhida = random.choice(os.listdir("./figurinhas/"))
+            lista_figs = os.listdir("./figurinhas/")
+            lista_selecionados = []
+            for fig in lista_figs:
+                if fig.lower().endswith(".webp"):
+                    lista_selecionados.append(fig)
 
-            figurinha_escolhida = os.path.join("./figurinhas/", figurinha_escolhida)
-
-            client.send_sticker(remetente_jid, figurinha_escolhida)
+            if not lista_selecionados:
+                return
+            
+            figurinha_escolhida = random.choice(lista_selecionados)
+            figurinha_mandar = os.path.join("./figurinhas/", figurinha_escolhida)
+            client.send_sticker(remetente_jid, figurinha_mandar)
 
     except Exception as e:
         client.send_message(remetente_jid, "Parece que aconteceu um erro interno")
