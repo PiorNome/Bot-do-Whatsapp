@@ -797,6 +797,11 @@ def tarefa(client):
             
             amigo = build_jid(os.getenv("AMIGO"))
             mensagem = criar_cronograma()
+
+            if mensagem == "Não a nenhum evento programado":
+                sleep(120)
+                continue
+            
             mensagem_final = '\n'.join(mensagem)
 
             client.send_message(amigo, mensagem_final)
