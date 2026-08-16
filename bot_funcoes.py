@@ -370,6 +370,7 @@ def adicionar_bd(texto:str) -> tuple[int]:
         
 
         if not 1 in retorna:
+            descricao = descricao.replace("\n", "\n\u200e")
             print("Salvando no Banco de Dados")
             sql = "INSERT INTO eventos(data_evento, materia, tipo, descricao) VALUES (?, ?, ?, ?)"
             valores = (data_objeto.date(), materia, tipo.title(), descricao)
