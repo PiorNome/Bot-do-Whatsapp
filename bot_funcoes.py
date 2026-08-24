@@ -373,7 +373,7 @@ def adicionar_bd(texto:str) -> tuple[int]:
             descricao = descricao.replace("\n", "\n\u200e")
             print("Salvando no Banco de Dados")
             sql = "INSERT INTO eventos(data_evento, materia, tipo, descricao) VALUES (?, ?, ?, ?)"
-            valores = (data_objeto.date(), materia, tipo.title(), descricao)
+            valores = (data_objeto.date(), materia, tipo.strip().title(), descricao)
             conexao = sqlite3.connect('cronograma.db')
             curso = conexao.cursor()
             curso.execute(sql, valores)
@@ -911,8 +911,11 @@ def criar_cronograma():
         materia_emojis:dict = json.load(f)
 
     eventos_pegos = buscar_eventos("tarefa")
-    domingo = datetime.now().replace(hour=0, second=0, minute=0, microsecond=0)
+    domingo = datetime.now()
     while domingo.weekday() != 6:
+        if (domingo.weekday() in (0, 1,2,3)) or (domingo.weekday() == 4 and domingo.time() <= time(11,29)):
+            domingo = domingo - timedelta(days=1)
+            continue
         domingo = domingo + timedelta(days=1)
 
     mensagem = []
@@ -922,7 +925,7 @@ def criar_cronograma():
         mensagem.append('📅 CRONOGRAMA DA SEMANA')
         mensagem.append('\n━━━━━━━━━━━━━━━━')
 
-        data_antiga = (datetime.now() - timedelta(days=1)).replace(hour=0, second=0, minute=0, microsecond=0)
+        data_antiga = (datetime.now() - timedelta(days=1)).replace(year=1999, hour=0, second=0, minute=0, microsecond=0)
         primeira = True
         sabado = domingo + timedelta(days=6)
         proxima_semana = sabado + timedelta(days=1)
@@ -967,7 +970,7 @@ def criar_cronograma():
                 if infos[4] != 'Vazio':
                     descricao = infos[4].replace('\n', '\n> ')
                     mensagem.append(f'> {descricao}')
-                mensagem.append("> _______")
+                mensagem.append("> \u200e")
 
             elif data_atual.date() <= fim_proxima.date():
                 if not f'📍 *ESSA SEMANA* ({domingo.strftime("%d/%m")} - {sabado.strftime("%d/%m")}):\n' in mensagem:
@@ -989,7 +992,7 @@ def criar_cronograma():
                 if infos[4] != 'Vazio':
                     descricao = infos[4].replace('\n', '\n> ')
                     mensagem.append(f'> {descricao}')
-                mensagem.append("> _______")
+                mensagem.append("> \u200e")
             
             else:
                 if not f'📍 *ESSA SEMANA* ({domingo.strftime("%d/%m")} - {sabado.strftime("%d/%m")}):\n' in mensagem:
@@ -1018,6 +1021,8 @@ def criar_cronograma():
                     mensagem.append("> ___")
                 else:
                     mensagem.append("> _________")
+
+        mensagem = [parte_mensagem.replace("> ", "> \u200e") for parte_mensagem in mensagem]
 
     else:
         mensagem.append("Não a nenhum evento programado")
