@@ -158,7 +158,7 @@ def decidir_destino(texto:str, numero_celular:str) -> tuple[str, any]:
                 return (comando, 'sem_permissão')
             
             if not lista_strs[1].isdecimal():
-                return "nao_decimal"
+                return "tipo_errado"
             
             qnt_deletado = comando_deletar(lista_strs[1])
             if qnt_deletado == -1:
