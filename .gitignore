@@ -1,4 +1,5 @@
 venv/
+venv14/
 cookie/
 cronograma.db
 cronograma*
@@ -7,6 +8,7 @@ __pycache__
 bd.sql
 deletar-testes.sql
 cronograma.sqbpro
+bot_funcoes.teste.py
 teste.db
 teste.py
 logs_mensagens.txt

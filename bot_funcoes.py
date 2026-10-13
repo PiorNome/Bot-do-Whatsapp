@@ -6,7 +6,12 @@ from dateutil.relativedelta import relativedelta
 from neonize.client import NewClient
 from neonize.utils import build_jid
 from dotenv import load_dotenv
+from google import genai
+from google.genai import types
 load_dotenv()
+
+_client = genai.Client(api_key=os.getenv("GENAI"))
+
 def decidir_destino(texto:str, numero_celular:str) -> tuple[str, any]:
     print(f"[Função: decidir_destino]")
     print(f"Recebeu {texto}")
@@ -158,7 +163,7 @@ def decidir_destino(texto:str, numero_celular:str) -> tuple[str, any]:
                 return (comando, 'sem_permissão')
             
             if not lista_strs[1].isdecimal():
-                return "tipo_errado"
+                return "nao_decimal"
             
             qnt_deletado = comando_deletar(lista_strs[1])
             if qnt_deletado == -1:
@@ -279,23 +284,87 @@ def decidir_destino(texto:str, numero_celular:str) -> tuple[str, any]:
 
 def adicionar_bd(texto:str) -> tuple[int]:
     print(f"[Função: adicionar_bd]")
-    
-    with open('constantes.json', 'r', encoding='utf-8') as f:
-        MATERIAS = json.load(f)
-
-    print("pegou as materias")
     retorna = [0, 0, 0] # se algum for igual a 1, significa que deu erro. Data é o 1º elemento, materia é o 2º elemento e o tipo é o 3º elemento
 
-    informacoes = texto.split(",")
-    print(f"Separou as informações")
-    qntd = len(informacoes) # A quantidade de partes que tem
+    evento = interpretar_evento(texto)
 
-    if qntd >= 2:
-        data = informacoes[0].strip()
-        tipo = informacoes[1].strip()
-        if tipo.lower() in ("férias", "ferias", "feriadão", "feriadao",):
-            tipo = "Férias"
+    if evento is not None and (evento.get('tipo') is not None or evento.get("data") is not None):
+        data_objeto = datetime.strptime(evento.get('data'), "%Y-%m-%d")
+        tipo = evento.get('tipo')
+        materia = evento.get('materia')
+        descricao = evento.get('descricao')
+
+    else:
+        with open('constantes.json', 'r', encoding='utf-8') as f:
+            MATERIAS = json.load(f)
+
+        print("pegou as materias")
+
+        informacoes = texto.split(",")
+        print(f"Separou as informações")
+        qntd = len(informacoes) # A quantidade de partes que tem
+
+        if qntd >= 2:
+            data = informacoes[0].strip()
+            tipo = informacoes[1].strip()
+            if tipo.lower() in ("férias", "ferias", "feriadão", "feriadao",):
+                tipo = "Férias"
+                formatos = ("%d/%m/%y", "%d/%m/%Y", "%d/%m")
+                try:
+                    print(f"Data colocada pelo usuario: {data}")
+                    data_objeto = datetime.strptime(data, formatos[0])
+                    print("Data valida")
+                except:
+                    try:
+                        data_objeto = datetime.strptime(data, formatos[1])
+                        print("Data valida")
+                    except:
+                        try:
+                            data_objeto = datetime.strptime(data, formatos[2])
+                            data_objeto = data_objeto.replace(year=2026)
+                            print("Data valida")
+                        except:
+                            print("Data invalida")
+                            retorna[0] = 1
+                
+                if not 1 in retorna:
+                    print("Salvando no Banco de Dados")
+                    sql = "INSERT INTO eventos(data_evento, materia, tipo, descricao) VALUES (?, ?, ?, ?)"
+                    valores = (data_objeto.date(), "Vazio", tipo.title(), "Vazio")
+                    conexao = sqlite3.connect('cronograma.db')
+                    curso = conexao.cursor()
+                    curso.execute(sql, valores)
+                    print("Salvou no Banco de Dados")
+                    conexao.commit()
+                print("[Acabou a função adicionar_bd]")
+                return tuple(retorna)
+
+        if qntd >= 3:
+            data = informacoes[0].strip()
+            tipo = informacoes[1].strip()
+            materia = informacoes[2].strip()
+
+            encontrou_materia = False
+            for materia_key in MATERIAS.keys():
+                if materia.lower() in MATERIAS[materia_key]:
+                    materia = materia_key
+                    encontrou_materia = True
+                    print(f"Encontro a matéria: {materia}")
+                    break
+            if not encontrou_materia:
+                print("Não encontrou a matéria")
+                retorna[1] = 1
+
+            descricao = 'Vazio'
+            if qntd > 3:
+                descricao = ''
+                descricao = ",".join(informacoes[3:]).strip()
+                print(f"Adicionou a descrição: {descricao}")
+        
+            # O bot vai verivicar se a data está certá
+            # O bot tenta aceitar tanto 25/04/26 quanto 25/04/2026
             formatos = ("%d/%m/%y", "%d/%m/%Y", "%d/%m")
+        
             try:
                 print(f"Data colocada pelo usuario: {data}")
                 data_objeto = datetime.strptime(data, formatos[0])
@@ -312,11 +381,13 @@ def adicionar_bd(texto:str) -> tuple[int]:
                     except:
                         print("Data invalida")
                         retorna[0] = 1
-            
+        
+
             if not 1 in retorna:
+                descricao = descricao.replace("\n", "\n\u200e")
                 print("Salvando no Banco de Dados")
                 sql = "INSERT INTO eventos(data_evento, materia, tipo, descricao) VALUES (?, ?, ?, ?)"
-                valores = (data_objeto.date(), "Vazio", tipo.title(), "Vazio")
+                valores = (data_objeto.date(), materia, tipo.strip().title(), descricao)
                 conexao = sqlite3.connect('cronograma.db')
                 curso = conexao.cursor()
                 curso.execute(sql, valores)
@@ -325,67 +396,21 @@ def adicionar_bd(texto:str) -> tuple[int]:
             print("[Acabou a função adicionar_bd]")
             return tuple(retorna)
 
-    if qntd >= 3:
-        data = informacoes[0].strip()
-        tipo = informacoes[1].strip()
-        materia = informacoes[2].strip()
-
-        encontrou_materia = False
-        for materia_key in MATERIAS.keys():
-            if materia.lower() in MATERIAS[materia_key]:
-                materia = materia_key
-                encontrou_materia = True
-                print(f"Encontro a matéria: {materia}")
-                break
-        if not encontrou_materia:
-            print("Não encontrou a matéria")
-            retorna[1] = 1
-
-        descricao = 'Vazio'
-        if qntd > 3:
-            descricao = ''
-            descricao = ",".join(informacoes[3:]).strip()
-            print(f"Adicionou a descrição: {descricao}")
-    
-        # O bot vai verivicar se a data está certá
-        # O bot tenta aceitar tanto 25/04/26 quanto 25/04/2026
-        formatos = ("%d/%m/%y", "%d/%m/%Y", "%d/%m")
-    
-        try:
-            print(f"Data colocada pelo usuario: {data}")
-            data_objeto = datetime.strptime(data, formatos[0])
-            print("Data valida")
-        except:
-            try:
-                data_objeto = datetime.strptime(data, formatos[1])
-                print("Data valida")
-            except:
-                try:
-                    data_objeto = datetime.strptime(data, formatos[2])
-                    data_objeto = data_objeto.replace(year=2026)
-                    print("Data valida")
-                except:
-                    print("Data invalida")
-                    retorna[0] = 1
-        
-
-        if not 1 in retorna:
-            descricao = descricao.replace("\n", "\n\u200e")
-            print("Salvando no Banco de Dados")
-            sql = "INSERT INTO eventos(data_evento, materia, tipo, descricao) VALUES (?, ?, ?, ?)"
-            valores = (data_objeto.date(), materia, tipo.strip().title(), descricao)
-            conexao = sqlite3.connect('cronograma.db')
-            curso = conexao.cursor()
-            curso.execute(sql, valores)
-            print("Salvou no Banco de Dados")
-            conexao.commit()
+        print("Por falta de argumentos, será retornado (-1)")
+        print("[Acabou a função adicionar_bd]")
+        return (-1,)
+    if not 1 in retorna:
+        descricao = descricao.replace("\n", "\n\u200e")
+        print("Salvando no Banco de Dados")
+        sql = "INSERT INTO eventos(data_evento, materia, tipo, descricao) VALUES (?, ?, ?, ?)"
+        valores = (data_objeto.date(), materia, tipo.strip().title(), descricao)
+        conexao = sqlite3.connect('cronograma.db')
+        curso = conexao.cursor()
+        curso.execute(sql, valores)
+        print("Salvou no Banco de Dados")
+        conexao.commit()
         print("[Acabou a função adicionar_bd]")
         return tuple(retorna)
-
-    print("Por falta de argumentos, será retornado (-1)")
-    print("[Acabou a função adicionar_bd]")
-    return (-1,)
-
 def buscar_evento_semana(dia_escolhido, proximo_dia):
     print("[Função buscar_evento_semana]")
     conexao = sqlite3.connect('cronograma.db')
@@ -1061,3 +1086,47 @@ def separar_por_datas(texto_bruto):
         blocos_finais.append(trecho)
         
     return blocos_finais
+
+
+def interpretar_evento(texto_digitado):
+    prompt_sistema = """
+    És um assistente escolar inteligente para um bot de WhatsApp de cronograma.
+    Normamente, o texto vai chegar nesse formato (separado com ",") "DD/MM, TIPO, MATERIA, DESCRIÇÃO", mas pode ser diferente.
+    Analisa o texto enviado pelo utilizador e extrai os seguintes dados estritamente em formato JSON puro:
+    
+    - "data": A data encontrada no formato "YYYY-MM-DD", e se não houver ano, coloque o ano 2026 (ex: "2026-06-25", "2026-07-17"). Se não houver, coloque None.
+    - "tipo": O tipo de evento. IMPORTANTE: Se o utilizador escrever explicitamente o tipo na mensagem (ex: "aniversario", "prova", "trabalho", "reunião", "falta"), deves usar essa mesma palavra (em minúsculas e sem acentos para padronizar).
+    - "materia": O nome da matéria, se houver. Se não houver matéria escolares (ex: matemática, física, biologia), coloque "Geral".
+    - "descricao": O restante do texto explicando o evento. Se não houver coloque "Vazio".
+    
+    EXEMPLOS DE COMPORTAMENTO:
+    - Entrada: "17/10, aniversario" -> {"data": "17/10", "tipo": "aniversario", "materia": None, "descricao": "Vazio"}
+    - Entrada: "8/06, prova de matematica, capitulo 4" -> {"data": "8/06", "tipo": "prova", "materia": "Matematica", "descricao": "capitulo 4"}
+
+    Retorna APENAS o bloco JSON, sem formatação de markdown (sem ```json no começo ou fim).
+    """
+
+    try:
+        # Usamos o modelo 'gemini-2.5-flash' que é extremamente rápido e gratuito
+        resposta = _client.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=texto_digitado,
+            config=types.GenerateContentConfig(
+                system_instruction=prompt_sistema,
+                temperature=0.1, # Baixa temperatura para ser mais preciso e seguir regras
+            ),
+        )
+        
+        # Limpa eventuais marcações de markdown que a IA possa colocar por engano
+        texto_resposta = resposta.text.replace("```json", "").replace("```", "").strip()
+        
+        # Converte o texto da IA em um dicionário Python
+        dados_json = json.loads(texto_resposta)
+        print(dados_json)
+        return dados_json
+
+    except Exception as e:
+        print(f"Erro ao consultar o Gemini: {e}")
+        return None
+
+
