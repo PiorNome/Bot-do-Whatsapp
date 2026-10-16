@@ -286,85 +286,33 @@ def adicionar_bd(texto:str) -> tuple[int]:
     print(f"[Função: adicionar_bd]")
     retorna = [0, 0, 0] # se algum for igual a 1, significa que deu erro. Data é o 1º elemento, materia é o 2º elemento e o tipo é o 3º elemento
 
-    evento = interpretar_evento(texto)
+    # evento = interpretar_evento(texto)
 
-    if evento is not None and (evento.get('tipo') is not None or evento.get("data") is not None):
-        data_objeto = datetime.strptime(evento.get('data'), "%Y-%m-%d")
-        tipo = evento.get('tipo')
-        materia = evento.get('materia')
-        descricao = evento.get('descricao')
+    # if evento is not None and (evento.get('tipo') is not None or evento.get("data") is not None):
+    #     data_objeto = datetime.strptime(evento.get('data'), "%Y-%m-%d")
+    #     tipo = evento.get('tipo')
+    #     materia = evento.get('materia')
+    #     descricao = evento.get('descricao')
 
-    else:
-        with open('constantes.json', 'r', encoding='utf-8') as f:
-            MATERIAS = json.load(f)
+    # else:
+    with open('constantes.json', 'r', encoding='utf-8') as f:
+        MATERIAS = json.load(f)
 
-        print("pegou as materias")
+    print("pegou as materias")
 
-        informacoes = texto.split(",")
-        print(f"Separou as informações")
-        qntd = len(informacoes) # A quantidade de partes que tem
+    informacoes = texto.split(",")
+    print(f"Separou as informações")
+    qntd = len(informacoes) # A quantidade de partes que tem
 
-        if qntd >= 2:
-            data = informacoes[0].strip()
-            tipo = informacoes[1].strip()
-            if tipo.lower() in ("férias", "ferias", "feriadão", "feriadao",):
-                tipo = "Férias"
-                formatos = ("%d/%m/%y", "%d/%m/%Y", "%d/%m")
-                try:
-                    print(f"Data colocada pelo usuario: {data}")
-                    data_objeto = datetime.strptime(data, formatos[0])
-                    print("Data valida")
-                except:
-                    try:
-                        data_objeto = datetime.strptime(data, formatos[1])
-                        print("Data valida")
-                    except:
-                        try:
-                            data_objeto = datetime.strptime(data, formatos[2])
-                            data_objeto = data_objeto.replace(year=2026)
-                            print("Data valida")
-                        except:
-                            print("Data invalida")
-                            retorna[0] = 1
-                
-                if not 1 in retorna:
-                    print("Salvando no Banco de Dados")
-                    sql = "INSERT INTO eventos(data_evento, materia, tipo, descricao) VALUES (?, ?, ?, ?)"
-                    valores = (data_objeto.date(), "Vazio", tipo.title(), "Vazio")
-                    conexao = sqlite3.connect('cronograma.db')
-                    curso = conexao.cursor()
-                    curso.execute(sql, valores)
-                    print("Salvou no Banco de Dados")
-                    conexao.commit()
-                print("[Acabou a função adicionar_bd]")
-                return tuple(retorna)
-
-        if qntd >= 3:
-            data = informacoes[0].strip()
-            tipo = informacoes[1].strip()
-            materia = informacoes[2].strip()
-
-            encontrou_materia = False
-            for materia_key in MATERIAS.keys():
-                if materia.lower() in MATERIAS[materia_key]:
-                    materia = materia_key
-                    encontrou_materia = True
-                    print(f"Encontro a matéria: {materia}")
-                    break
-            if not encontrou_materia:
-                print("Não encontrou a matéria")
-                retorna[1] = 1
-
-            descricao = 'Vazio'
-            if qntd > 3:
-                descricao = ''
-                descricao = ",".join(informacoes[3:]).strip()
-                print(f"Adicionou a descrição: {descricao}")
-        
-            # O bot vai verivicar se a data está certá
-            # O bot tenta aceitar tanto 25/04/26 quanto 25/04/2026
+    if qntd >= 2:
+        data = informacoes[0].strip()
+        tipo = informacoes[1].strip()
+        print("entrou em qntd >= 2")
+        print(f"tipo == {tipo}")
+        if qntd == 2:
+            print("passou")
+            
             formatos = ("%d/%m/%y", "%d/%m/%Y", "%d/%m")
-        
             try:
                 print(f"Data colocada pelo usuario: {data}")
                 data_objeto = datetime.strptime(data, formatos[0])
@@ -381,13 +329,11 @@ def adicionar_bd(texto:str) -> tuple[int]:
                     except:
                         print("Data invalida")
                         retorna[0] = 1
-        
 
             if not 1 in retorna:
-                descricao = descricao.replace("\n", "\n\u200e")
                 print("Salvando no Banco de Dados")
                 sql = "INSERT INTO eventos(data_evento, materia, tipo, descricao) VALUES (?, ?, ?, ?)"
-                valores = (data_objeto.date(), materia, tipo.strip().title(), descricao)
+                valores = (data_objeto.date(), "Geral", tipo.title(), "Vazio")
                 conexao = sqlite3.connect('cronograma.db')
                 curso = conexao.cursor()
                 curso.execute(sql, valores)
@@ -396,21 +342,67 @@ def adicionar_bd(texto:str) -> tuple[int]:
             print("[Acabou a função adicionar_bd]")
             return tuple(retorna)
 
-        print("Por falta de argumentos, será retornado (-1)")
-        print("[Acabou a função adicionar_bd]")
-        return (-1,)
-    if not 1 in retorna:
-        descricao = descricao.replace("\n", "\n\u200e")
-        print("Salvando no Banco de Dados")
-        sql = "INSERT INTO eventos(data_evento, materia, tipo, descricao) VALUES (?, ?, ?, ?)"
-        valores = (data_objeto.date(), materia, tipo.strip().title(), descricao)
-        conexao = sqlite3.connect('cronograma.db')
-        curso = conexao.cursor()
-        curso.execute(sql, valores)
-        print("Salvou no Banco de Dados")
-        conexao.commit()
+    if qntd >= 3:
+        data = informacoes[0].strip()
+        tipo = informacoes[1].strip()
+        materia = informacoes[2].strip()
+
+        encontrou_materia = False
+        for materia_key in MATERIAS.keys():
+            if materia.lower() in MATERIAS[materia_key]:
+                materia = materia_key
+                encontrou_materia = True
+                print(f"Encontro a matéria: {materia}")
+                break
+        if not encontrou_materia:
+            print("Não encontrou a matéria")
+            materia = "Geral"
+
+        descricao = 'Vazio'
+        if qntd > 3:
+            descricao = ''
+            descricao = ",".join(informacoes[3:]).strip()
+            print(f"Adicionou a descrição: {descricao}")
+    
+        # O bot vai verivicar se a data está certá
+        # O bot tenta aceitar tanto 25/04/26 quanto 25/04/2026
+        formatos = ("%d/%m/%y", "%d/%m/%Y", "%d/%m")
+    
+        try:
+            print(f"Data colocada pelo usuario: {data}")
+            data_objeto = datetime.strptime(data, formatos[0])
+            print("Data valida")
+        except:
+            try:
+                data_objeto = datetime.strptime(data, formatos[1])
+                print("Data valida")
+            except:
+                try:
+                    data_objeto = datetime.strptime(data, formatos[2])
+                    data_objeto = data_objeto.replace(year=2026)
+                    print("Data valida")
+                except:
+                    print("Data invalida")
+                    retorna[0] = 1
+    
+
+        if not 1 in retorna:
+            descricao = descricao.replace("\n", "\n\u200e")
+            print("Salvando no Banco de Dados")
+            sql = "INSERT INTO eventos(data_evento, materia, tipo, descricao) VALUES (?, ?, ?, ?)"
+            valores = (data_objeto.date(), materia, tipo.strip().title(), descricao)
+            conexao = sqlite3.connect('cronograma.db')
+            curso = conexao.cursor()
+            curso.execute(sql, valores)
+            print("Salvou no Banco de Dados")
+            conexao.commit()
         print("[Acabou a função adicionar_bd]")
         return tuple(retorna)
+
+    print("Por falta de argumentos, será retornado (-1)")
+    print("[Acabou a função adicionar_bd]")
+    return (-1,)
+
 def buscar_evento_semana(dia_escolhido, proximo_dia):
     print("[Função buscar_evento_semana]")
     conexao = sqlite3.connect('cronograma.db')
@@ -964,7 +956,7 @@ def criar_cronograma():
 
             data_atual = datetime.strptime(infos[1], "%Y-%m-%d")
 
-            if infos[2] != 'Vazio':
+            if infos[2] != 'Vazio' and infos[2] != "Geral":
                 if materia_emojis.get(infos[2]) is None:
                     for materia_key in MATERIAS.keys():
                         if infos[2].lower() in MATERIAS[materia_key]:
@@ -977,7 +969,7 @@ def criar_cronograma():
                     materia = infos[2]
             else:
                 materia = ''
-                emoji = materia_emojis[infos[3]]
+                emoji = ''
 
             if data_atual.date() <= sabado.date():
                 if not f'📍 *ESSA SEMANA* ({domingo.strftime("%d/%m")} - {sabado.strftime("%d/%m")}):\n' in mensagem:
@@ -989,7 +981,7 @@ def criar_cronograma():
                     parte_mensagem_enviara.append(f'### {data_atual.strftime("%d/%m")}')
 
 
-                parte_mensagem_enviara.append(f'- {infos[3]} - {materia} {emoji}')
+                parte_mensagem_enviara.append(f'- {infos[3]} {f"- {materia} {emoji}" if materia != "Geral" else ""}')
 
                 mensagem.extend(parte_mensagem_enviara)
                 if infos[4] != 'Vazio':

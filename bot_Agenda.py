@@ -236,7 +236,7 @@ def on_message(client: NewClient, event: MessageEv):
                             materia = infos[2]
                     else:
                         print("É infos[2] é Vazio")
-                        materia = 'Geral'
+                        materia = ''
                         emoji = ''
 
                     data = infos[1]
@@ -251,7 +251,7 @@ def on_message(client: NewClient, event: MessageEv):
                     if resultado[0] == 'listar':
                         parte_mensagem_enviara.append(f'🆔: {infos[0]}')
 
-                    parte_mensagem_enviara.append(f'- {infos[3]} - {materia} {emoji}')
+                    parte_mensagem_enviara.append(f'- {infos[3]} {f"- {materia} {emoji}" if materia != "" else ""}')
 
                     resposta.extend(parte_mensagem_enviara)
                     if infos[4] != 'Vazio':
